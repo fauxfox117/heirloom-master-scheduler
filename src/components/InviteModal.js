@@ -58,7 +58,7 @@ export function InviteModal({
           marginBottom: 18,
         }}
       >
-        <div style={{ fontWeight: 800, fontSize: 17 }}>Invite Users</div>
+        <div style={{ fontWeight: 800, fontSize: 17 }}>✉️ Invite Users</div>
         <button
           onClick={onClose}
           style={{
@@ -69,7 +69,7 @@ export function InviteModal({
             color: "#9CA3AF",
           }}
         >
-          &times;
+          ✕
         </button>
       </div>
 
@@ -109,8 +109,8 @@ export function InviteModal({
             onChange={(e) => setRole(e.target.value)}
             style={inputStyle}
           >
-            <option value="viewer">Viewer — read only</option>
-            <option value="admin">Admin — full access</option>
+            <option value="viewer">👁 Viewer — read only</option>
+            <option value="admin">🔑 Admin — full access</option>
           </select>
         </div>
         <div style={{ marginBottom: 12 }}>
@@ -145,7 +145,7 @@ export function InviteModal({
               marginBottom: 10,
             }}
           >
-            {error}
+            ⚠ {error}
           </div>
         )}
         <button
@@ -216,7 +216,7 @@ export function InviteModal({
                       color: inv.role === "admin" ? "#2D6BE4" : "#6B7280",
                     }}
                   >
-                    {inv.role === "admin" ? "Admin" : "Viewer"}
+                    {inv.role === "admin" ? "🔑 Admin" : "👁 Viewer"}
                   </span>
                   {inv.email && (
                     <span style={{ fontSize: 11, color: "#6B7280" }}>
@@ -279,7 +279,9 @@ export function InviteModal({
                       cursor: "pointer",
                     }}
                   >
-                    {copied === inv.token ? "Copied" : "Copy invite message"}
+                    {copied === inv.token
+                      ? "✓ Copied"
+                      : "📋 Copy invite message"}
                   </button>
                   <button
                     onClick={() => onRevokeInvite(inv.token)}
@@ -332,7 +334,7 @@ export function InviteModal({
                 }}
               >
                 <span style={{ fontSize: 10, color: "#9CA3AF" }}>
-                  {inv.role}
+                  {inv.role === "admin" ? "🔑" : "👁"} {inv.role}
                 </span>
                 {inv.email && (
                   <span style={{ fontSize: 10, color: "#9CA3AF" }}>
@@ -350,7 +352,7 @@ export function InviteModal({
                     borderRadius: 4,
                   }}
                 >
-                  Used
+                  ✓ Used
                 </span>
               </div>
             ))}
@@ -382,9 +384,9 @@ export function InviteModal({
           color: "#92400E",
         }}
       >
-        <strong>How it works:</strong> Click "Copy invite message" to copy a
+        <strong>📋 How it works:</strong> Click "Copy invite message" to copy a
         ready-to-send message with the code. They open the app, click{" "}
-        <strong>Invite Code</strong> on the login screen, paste the code, and
+        <strong>✉️ Invite Code</strong> on the login screen, paste the code, and
         set up their own account. Each code works once only.
       </div>
     </ModalWrap>

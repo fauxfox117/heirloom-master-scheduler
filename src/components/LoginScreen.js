@@ -51,8 +51,8 @@ export function LoginScreen({ onSignupWithInvite }) {
   };
 
   const tabs = [
-    ["signin", "Sign In"],
-    ["invite", "Invite Code"],
+    ["signin", "🔐 Sign In"],
+    ["invite", "✉️ Invite Code"],
   ];
 
   return (
@@ -78,7 +78,7 @@ export function LoginScreen({ onSignupWithInvite }) {
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 18,
+              fontSize: 28,
               fontWeight: 800,
               color: "#fff",
               letterSpacing: "-0.5px",
@@ -86,7 +86,7 @@ export function LoginScreen({ onSignupWithInvite }) {
               boxShadow: "0 8px 32px rgba(45,107,228,0.4)",
             }}
           >
-            MS
+            🏗️
           </div>
           <div
             style={{
@@ -214,7 +214,7 @@ export function LoginScreen({ onSignupWithInvite }) {
                       padding: 0,
                     }}
                   >
-                    {showPw ? "Hide" : "Show"}
+                    {showPw ? "🙈" : "👁"}
                   </button>
                 </div>
               </div>
@@ -231,7 +231,7 @@ export function LoginScreen({ onSignupWithInvite }) {
                     marginBottom: 14,
                   }}
                 >
-                  {error}
+                  ⚠ {error}
                 </div>
               )}
               <button
@@ -265,7 +265,7 @@ export function LoginScreen({ onSignupWithInvite }) {
                   style={{ color: "#0891B2", cursor: "pointer" }}
                   onClick={() => setTab("invite")}
                 >
-                  Use an invite code
+                  Use an invite code ✉️
                 </strong>
               </div>
             </>
@@ -342,7 +342,7 @@ export function LoginScreen({ onSignupWithInvite }) {
                     marginBottom: 14,
                   }}
                 >
-                  {error}
+                  ⚠ {error}
                 </div>
               )}
               <button

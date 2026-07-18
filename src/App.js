@@ -125,7 +125,6 @@ export default function App() {
     hoursPerDay: 8,
     colorIdx: 0,
   });
-  const [exportOpen, setExportOpen] = useState(false);
   const [toast, setToast] = useState(null);
   const [filterCat, setFilterCat] = useState("All");
   const [dayDetail, setDayDetail] = useState(null);
@@ -163,7 +162,7 @@ export default function App() {
 
   function requireAdmin() {
     if (isAdmin) return true;
-    notify("View only — contact an admin to make changes.");
+    notify("🔒 View only — contact an admin to make changes.");
     return false;
   }
 
@@ -457,7 +456,7 @@ export default function App() {
               fontSize: 16,
             }}
           >
-            MS{" "}
+            🏗️
           </div>
           <span
             style={{ fontWeight: 800, fontSize: 16, letterSpacing: "-0.4px" }}
@@ -475,15 +474,15 @@ export default function App() {
               border: `1px solid ${isAdmin ? "#C7D7FA" : "#E5E7EB"}`,
             }}
           >
-            {isAdmin ? "Admin" : "Viewer"}
+            {isAdmin ? "🔑 Admin" : "👁 Viewer"}
           </span>
         </div>
 
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           {[
-            ["schedule", "Schedule"],
-            ["jobs", "Jobs"],
-            ["members", "Team"],
+            ["schedule", "📅 Schedule"],
+            ["jobs", "🗂 Jobs"],
+            ["members", "👷 Team"],
           ].map(([v, label]) => (
             <button
               key={v}
@@ -517,7 +516,7 @@ export default function App() {
                 cursor: "pointer",
               }}
             >
-              Users
+              👥 Users
             </button>
           )}
           {isAdmin && (
@@ -534,13 +533,19 @@ export default function App() {
                 cursor: "pointer",
               }}
             >
-              Invite
+              ✉️ Invite
             </button>
           )}
 
-          <div style={{ position: "relative", marginLeft: 2 }}>
+          <div style={{ marginLeft: 2 }}>
             <button
-              onClick={() => setExportOpen((o) => !o)}
+              onClick={() => {
+                triggerDownload(
+                  buildICS(assignments, members, jobs),
+                  "master-schedule.ics",
+                );
+                notify("Downloaded — import the .ics into your calendar app.");
+              }}
               style={{
                 padding: "5px 13px",
                 borderRadius: 7,
@@ -554,63 +559,6 @@ export default function App() {
             >
               ↗ Export
             </button>
-            {exportOpen && (
-              <div
-                style={{
-                  position: "absolute",
-                  right: 0,
-                  top: 36,
-                  background: "#fff",
-                  border: "1px solid #E5E7EB",
-                  borderRadius: 10,
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
-                  zIndex: 200,
-                  minWidth: 210,
-                  overflow: "hidden",
-                }}
-              >
-                {["Apple Calendar (.ics)", "Google Calendar (.ics)"].map(
-                  (label) => (
-                    <button
-                      key={label}
-                      onClick={() => {
-                        triggerDownload(
-                          buildICS(assignments, members, jobs),
-                          "master-schedule.ics",
-                        );
-                        setExportOpen(false);
-                        notify(
-                          "Downloaded — import the .ics in your calendar app.",
-                        );
-                      }}
-                      style={{
-                        display: "block",
-                        width: "100%",
-                        textAlign: "left",
-                        padding: "10px 16px",
-                        background: "none",
-                        border: "none",
-                        fontSize: 13,
-                        cursor: "pointer",
-                        color: "#111827",
-                      }}
-                    >
-                      {label}
-                    </button>
-                  ),
-                )}
-                <div
-                  style={{
-                    borderTop: "1px solid #E5E7EB",
-                    padding: "7px 16px",
-                    fontSize: 11,
-                    color: "#9CA3AF",
-                  }}
-                >
-                  Import .ics into your calendar app
-                </div>
-              </div>
-            )}
           </div>
 
           <div
@@ -673,7 +621,7 @@ export default function App() {
                 cursor: "pointer",
               }}
             >
-              Account
+              ⚙️ Account
             </button>
             <button
               onClick={() => supabase.auth.signOut()}
@@ -707,7 +655,7 @@ export default function App() {
             gap: 8,
           }}
         >
-          <strong>View-only mode.</strong> You can see the full schedule but
+          👁 <strong>View-only mode.</strong> You can see the full schedule but
           cannot make changes. Contact an admin to update assignments.
         </div>
       )}
@@ -982,8 +930,8 @@ export default function App() {
                               >
                                 {peopleCount -
                                   toCounts.sick -
-                                  toCounts.vacation}{" "}
-                                crew
+                                  toCounts.vacation}
+                                👷
                               </span>
                             )}
                             {toCounts.sick > 0 && (
@@ -1274,7 +1222,7 @@ export default function App() {
                             onClick={() => {
                               if (!isAdmin) {
                                 notify(
-                                  "View only — contact an admin to make changes.",
+                                  "🔒 View only — contact an admin to make changes.",
                                 );
                                 return;
                               }
@@ -1817,7 +1765,7 @@ export default function App() {
                           marginBottom: 12,
                         }}
                       >
-                        {Math.max(0, st.allocated - st.used)} MD remaining —
+                        ⚠️ {Math.max(0, st.allocated - st.used)} MD remaining —
                         approaching limit
                       </div>
                     )}

@@ -87,7 +87,7 @@ export function SignupScreen({ invite, onSignup, onBackToLogin }) {
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: 18,
+              fontSize: 28,
               fontWeight: 800,
               color: "#fff",
               letterSpacing: "-0.5px",
@@ -95,7 +95,7 @@ export function SignupScreen({ invite, onSignup, onBackToLogin }) {
               boxShadow: "0 8px 32px rgba(45,107,228,0.4)",
             }}
           >
-            MS
+            🏗️
           </div>
           <div
             style={{
@@ -149,7 +149,7 @@ export function SignupScreen({ invite, onSignup, onBackToLogin }) {
                 flexShrink: 0,
               }}
             >
-              {invite.role === "admin" ? "A" : "V"}
+              {invite.role === "admin" ? "🔑" : "👁"}
             </div>
             <div>
               <div style={{ fontWeight: 700, fontSize: 13 }}>
@@ -276,7 +276,7 @@ export function SignupScreen({ invite, onSignup, onBackToLogin }) {
                   padding: 0,
                 }}
               >
-                {showPw ? "Hide" : "Show"}
+                {showPw ? "🙈" : "👁"}
               </button>
             </div>
           </div>
@@ -318,7 +318,7 @@ export function SignupScreen({ invite, onSignup, onBackToLogin }) {
                 marginBottom: 14,
               }}
             >
-              {error}
+              ⚠ {error}
             </div>
           )}
 

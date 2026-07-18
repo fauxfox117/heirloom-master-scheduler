@@ -118,7 +118,7 @@ export function MyAccountModal({ user, allUsers, onSave, onClose }) {
           marginBottom: 20,
         }}
       >
-        <div style={{ fontWeight: 800, fontSize: 17 }}>My Account</div>
+        <div style={{ fontWeight: 800, fontSize: 17 }}>⚙️ My Account</div>
         <button
           onClick={onClose}
           style={{
@@ -129,7 +129,7 @@ export function MyAccountModal({ user, allUsers, onSave, onClose }) {
             color: "#9CA3AF",
           }}
         >
-          &times;
+          ✕
         </button>
       </div>
 
@@ -174,7 +174,7 @@ export function MyAccountModal({ user, allUsers, onSave, onClose }) {
               fontWeight: 600,
             }}
           >
-            {user.role === "admin" ? "Admin" : "Viewer"}
+            {user.role === "admin" ? "🔑 Admin" : "👁 Viewer"}
           </div>
         </div>
       </div>
@@ -239,7 +239,7 @@ export function MyAccountModal({ user, allUsers, onSave, onClose }) {
             onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
           />
           <button style={eyeBtn} onClick={() => setShowCur((s) => !s)}>
-            {showCur ? "Hide" : "Show"}
+            {showCur ? "🙈" : "👁"}
           </button>
         </div>
       </div>
@@ -256,7 +256,7 @@ export function MyAccountModal({ user, allUsers, onSave, onClose }) {
             onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
           />
           <button style={eyeBtn} onClick={() => setShowNew((s) => !s)}>
-            {showNew ? "Hide" : "Show"}
+            {showNew ? "🙈" : "👁"}
           </button>
         </div>
       </div>
@@ -286,7 +286,7 @@ export function MyAccountModal({ user, allUsers, onSave, onClose }) {
             marginBottom: 14,
           }}
         >
-          {error}
+          ⚠ {error}
         </div>
       )}
       {success && (
@@ -302,7 +302,7 @@ export function MyAccountModal({ user, allUsers, onSave, onClose }) {
             marginBottom: 14,
           }}
         >
-          {success}
+          ✓ {success}
         </div>
       )}
 

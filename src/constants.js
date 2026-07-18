@@ -14,10 +14,10 @@ export const MEMBER_COLORS = [
 export const JOB_CATEGORIES = ["Metal Fab", "Install", "Stair", "Other"];
 
 export const CAT = {
-  "Metal Fab": { bg: "#1E40AF", light: "#DBEAFE", dot: "#3B82F6" },
-  Install: { bg: "#065F46", light: "#D1FAE5", dot: "#10B981" },
-  Stair: { bg: "#7C2D12", light: "#FEF3C7", dot: "#F59E0B" },
-  Other: { bg: "#374151", light: "#F3F4F6", dot: "#9CA3AF" },
+  "Metal Fab": { bg: "#1E40AF", light: "#DBEAFE", dot: "#3B82F6", icon: "🔩" },
+  Install: { bg: "#065F46", light: "#D1FAE5", dot: "#10B981", icon: "🔧" },
+  Stair: { bg: "#7C2D12", light: "#FEF3C7", dot: "#F59E0B", icon: "🪜" },
+  Other: { bg: "#374151", light: "#F3F4F6", dot: "#9CA3AF", icon: "📋" },
 };
 
 export const DOW_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

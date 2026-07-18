@@ -50,7 +50,7 @@ export function UserManagementModal({
           marginBottom: 18,
         }}
       >
-        <div style={{ fontWeight: 800, fontSize: 17 }}>User Management</div>
+        <div style={{ fontWeight: 800, fontSize: 17 }}>👥 User Management</div>
         <button
           onClick={onClose}
           style={{
@@ -61,7 +61,7 @@ export function UserManagementModal({
             color: "#9CA3AF",
           }}
         >
-          &times;
+          ✕
         </button>
       </div>
 
@@ -78,7 +78,7 @@ export function UserManagementModal({
             marginBottom: 14,
           }}
         >
-          {error}
+          ⚠ {error}
         </div>
       )}
 
@@ -162,7 +162,7 @@ export function UserManagementModal({
                     color: u.role === "admin" ? "#2D6BE4" : "#6B7280",
                   }}
                 >
-                  {u.role === "admin" ? "Admin" : "Viewer"}
+                  {u.role === "admin" ? "🔑 Admin" : "👁 Viewer"}
                 </span>
                 <button
                   onClick={() => {
@@ -201,7 +201,7 @@ export function UserManagementModal({
                       cursor: "pointer",
                     }}
                   >
-                    &times;
+                    ✕
                   </button>
                 )}
               </div>
@@ -303,8 +303,8 @@ export function UserManagementModal({
                         style={iStyle}
                         disabled={isMe}
                       >
-                        <option value="viewer">Viewer</option>
-                        <option value="admin">Admin</option>
+                        <option value="viewer">👁 Viewer</option>
+                        <option value="admin">🔑 Admin</option>
                       </select>
                     </div>
                   </div>
@@ -354,7 +354,7 @@ export function UserManagementModal({
         }}
       >
         To add new users, close this panel and use the{" "}
-        <strong>Invite Users</strong> button.
+        <strong>✉️ Invite Users</strong> button.
       </div>
 
       <div
