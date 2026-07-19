@@ -528,7 +528,11 @@ export default function App() {
             </div>
             {!isMobile && (
               <span
-                style={{ fontWeight: 800, fontSize: 16, letterSpacing: "-0.4px" }}
+                style={{
+                  fontWeight: 800,
+                  fontSize: 16,
+                  letterSpacing: "-0.4px",
+                }}
               >
                 Master Scheduler
               </span>
@@ -548,30 +552,37 @@ export default function App() {
             </span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 8 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: isMobile ? 6 : 8,
+            }}
+          >
             {/* Desktop nav buttons — hidden on mobile (shown in bottom bar) */}
-            {!isMobile && [
-              ["schedule", "📅 Schedule"],
-              ["jobs", "🗂 Jobs"],
-              ["members", "👷 Team"],
-            ].map(([v, label]) => (
-              <button
-                key={v}
-                onClick={() => setMainView(v)}
-                style={{
-                  padding: "5px 13px",
-                  borderRadius: 7,
-                  border: "none",
-                  background: mainView === v ? "#2D6BE4" : "#F3F4F6",
-                  color: mainView === v ? "#fff" : "#6B7280",
-                  fontWeight: 600,
-                  fontSize: 12,
-                  cursor: "pointer",
-                }}
-              >
-                {label}
-              </button>
-            ))}
+            {!isMobile &&
+              [
+                ["schedule", "📅 Schedule"],
+                ["jobs", "🗂 Jobs"],
+                ["members", "👷 Team"],
+              ].map(([v, label]) => (
+                <button
+                  key={v}
+                  onClick={() => setMainView(v)}
+                  style={{
+                    padding: "5px 13px",
+                    borderRadius: 7,
+                    border: "none",
+                    background: mainView === v ? "#2D6BE4" : "#F3F4F6",
+                    color: mainView === v ? "#fff" : "#6B7280",
+                    fontWeight: 600,
+                    fontSize: 12,
+                    cursor: "pointer",
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
 
             {!isMobile && isAdmin && (
               <button
@@ -615,7 +626,9 @@ export default function App() {
                       buildICS(assignments, members, jobs),
                       "master-schedule.ics",
                     );
-                    notify("Downloaded — import the .ics into your calendar app.");
+                    notify(
+                      "Downloaded — import the .ics into your calendar app.",
+                    );
                   }}
                   style={{
                     padding: "5px 13px",
@@ -676,7 +689,11 @@ export default function App() {
                   </div>
                   {currentUser.email && (
                     <div
-                      style={{ fontSize: 10, color: "#9CA3AF", lineHeight: 1.2 }}
+                      style={{
+                        fontSize: 10,
+                        color: "#9CA3AF",
+                        lineHeight: 1.2,
+                      }}
                     >
                       {currentUser.email}
                     </div>
@@ -812,143 +829,168 @@ export default function App() {
         </div>
       )}
 
-      <div style={{ maxWidth: 1300, margin: "0 auto", padding: "20px 16px" }}>
+      <div
+        style={{
+          maxWidth: 1300,
+          margin: "0 auto",
+          padding: isMobile ? "14px 10px 80px" : "20px 16px",
+        }}
+      >
         {/* ══ SCHEDULE VIEW ══ */}
         {mainView === "schedule" && (
           <div>
             <div
               style={{
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
-                gap: 10,
+                justifyContent: "space-between",
                 marginBottom: 18,
                 flexWrap: "wrap",
+                gap: 10,
               }}
             >
+              {/* View toggle + date navigation */}
               <div
                 style={{
                   display: "flex",
-                  background: "#1A1D23",
-                  borderRadius: 8,
-                  padding: 3,
-                  gap: 2,
+                  flexDirection: isMobile ? "column" : "row",
+                  alignItems: "center",
+                  gap: 10,
+                  flexWrap: "wrap",
                 }}
               >
-                <button
-                  onClick={() => setCalView("month")}
+                <div
                   style={{
-                    padding: "6px 18px",
-                    borderRadius: 6,
-                    border: "none",
-                    background: calView === "month" ? "#2D6BE4" : "transparent",
-                    color: calView === "month" ? "#fff" : "#9CA3AF",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    cursor: "pointer",
+                    display: "flex",
+                    background: "#1A1D23",
+                    borderRadius: 8,
+                    padding: 3,
+                    gap: 2,
                   }}
                 >
-                  Month
-                </button>
-                <button
-                  onClick={() => setCalView("week")}
-                  style={{
-                    padding: "6px 18px",
-                    borderRadius: 6,
-                    border: "none",
-                    background: calView === "week" ? "#2D6BE4" : "transparent",
-                    color: calView === "week" ? "#fff" : "#9CA3AF",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    cursor: "pointer",
-                  }}
-                >
-                  Week
-                </button>
+                  <button
+                    onClick={() => setCalView("month")}
+                    style={{
+                      padding: "6px 18px",
+                      borderRadius: 6,
+                      border: "none",
+                      background:
+                        calView === "month" ? "#2D6BE4" : "transparent",
+                      color: calView === "month" ? "#fff" : "#9CA3AF",
+                      fontWeight: 700,
+                      fontSize: 13,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Month
+                  </button>
+                  <button
+                    onClick={() => setCalView("week")}
+                    style={{
+                      padding: "6px 18px",
+                      borderRadius: 6,
+                      border: "none",
+                      background:
+                        calView === "week" ? "#2D6BE4" : "transparent",
+                      color: calView === "week" ? "#fff" : "#9CA3AF",
+                      fontWeight: 700,
+                      fontSize: 13,
+                      cursor: "pointer",
+                    }}
+                  >
+                    Week
+                  </button>
+                </div>
+
+                {calView === "month" ? (
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 6 }}
+                  >
+                    <button onClick={prevMonth} style={S.navBtn}>
+                      ‹
+                    </button>
+                    <span
+                      style={{
+                        fontWeight: 800,
+                        fontSize: 17,
+                        minWidth: 170,
+                        textAlign: "center",
+                      }}
+                    >
+                      {monthLabel}
+                    </span>
+                    <button onClick={nextMonth} style={S.navBtn}>
+                      ›
+                    </button>
+                    <button
+                      onClick={goToday}
+                      style={{
+                        ...S.navBtn,
+                        borderColor: "#2D6BE4",
+                        color: "#2D6BE4",
+                      }}
+                    >
+                      Today
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 6 }}
+                  >
+                    <button
+                      onClick={() => setWeekStart((d) => addDays(d, -7))}
+                      style={S.navBtn}
+                    >
+                      ‹ Prev
+                    </button>
+                    <span
+                      style={{
+                        fontWeight: 800,
+                        fontSize: 15,
+                        minWidth: 210,
+                        textAlign: "center",
+                      }}
+                    >
+                      {fmtShort(weekDays[0])} – {fmtShort(weekDays[4])},{" "}
+                      {weekDays[0].getFullYear()}
+                    </span>
+                    <button
+                      onClick={() => setWeekStart((d) => addDays(d, 7))}
+                      style={S.navBtn}
+                    >
+                      Next ›
+                    </button>
+                    <button
+                      onClick={goToday}
+                      style={{
+                        ...S.navBtn,
+                        borderColor: "#2D6BE4",
+                        color: "#2D6BE4",
+                      }}
+                    >
+                      Today
+                    </button>
+                  </div>
+                )}
               </div>
 
-              {calView === "month" ? (
-                <>
-                  <button onClick={prevMonth} style={S.navBtn}>
-                    ‹
-                  </button>
-                  <span
-                    style={{
-                      fontWeight: 800,
-                      fontSize: 17,
-                      minWidth: 170,
-                      textAlign: "center",
-                    }}
-                  >
-                    {monthLabel}
-                  </span>
-                  <button onClick={nextMonth} style={S.navBtn}>
-                    ›
-                  </button>
-                  <button
-                    onClick={goToday}
-                    style={{
-                      ...S.navBtn,
-                      borderColor: "#2D6BE4",
-                      color: "#2D6BE4",
-                    }}
-                  >
-                    Today
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => setWeekStart((d) => addDays(d, -7))}
-                    style={S.navBtn}
-                  >
-                    ‹ Prev
-                  </button>
-                  <span
-                    style={{
-                      fontWeight: 800,
-                      fontSize: 15,
-                      minWidth: 210,
-                      textAlign: "center",
-                    }}
-                  >
-                    {fmtShort(weekDays[0])} – {fmtShort(weekDays[4])},{" "}
-                    {weekDays[0].getFullYear()}
-                  </span>
-                  <button
-                    onClick={() => setWeekStart((d) => addDays(d, 7))}
-                    style={S.navBtn}
-                  >
-                    Next ›
-                  </button>
-                  <button
-                    onClick={goToday}
-                    style={{
-                      ...S.navBtn,
-                      borderColor: "#2D6BE4",
-                      color: "#2D6BE4",
-                    }}
-                  >
-                    Today
-                  </button>
-                </>
-              )}
-
-              <div style={{ flex: 1 }} />
+              {/* Action buttons */}
               {isAdmin && (
-                <button
-                  onClick={() => setModal({ type: "addJob" })}
-                  style={S.blueBtn}
-                >
-                  + Job
-                </button>
-              )}
-              {isAdmin && (
-                <button
-                  onClick={() => setModal({ type: "addMember" })}
-                  style={S.greenBtn}
-                >
-                  + Member
-                </button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button
+                    onClick={() => setModal({ type: "addJob" })}
+                    style={S.blueBtn}
+                  >
+                    + Job
+                  </button>
+                  <button
+                    onClick={() => setModal({ type: "addMember" })}
+                    style={S.greenBtn}
+                  >
+                    + Member
+                  </button>
+                </div>
               )}
             </div>
 
@@ -956,183 +998,244 @@ export default function App() {
             {calView === "month" && (
               <div
                 style={{
-                  background: "#fff",
+                  overflowX: "auto",
+                  WebkitOverflowScrolling: "touch",
                   borderRadius: 14,
                   border: "1px solid #E5E7EB",
-                  overflow: "hidden",
                   boxShadow: "0 1px 6px rgba(0,0,0,0.05)",
                 }}
               >
                 <div
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(7, 1fr)",
-                    background: "#1A1D23",
+                    background: "#fff",
+                    borderRadius: 14,
+                    overflow: "hidden",
+                    minWidth: 560,
                   }}
                 >
-                  {DOW_LABELS.map((h) => (
-                    <div
-                      key={h}
-                      style={{
-                        padding: "10px 0",
-                        textAlign: "center",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: "#9CA3AF",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px",
-                      }}
-                    >
-                      {h}
-                    </div>
-                  ))}
-                </div>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(7, 1fr)",
-                  }}
-                >
-                  {monthCells.map((cellDate, idx) => {
-                    const dk = toKey(cellDate);
-                    const inMonth = cellDate.getMonth() === calMonth;
-                    const isToday = dk === todayKey;
-                    const isWeekend =
-                      cellDate.getDay() === 0 || cellDate.getDay() === 6;
-                    const dayJobList = dayUniqueJobs(dk);
-                    const toCounts = dayTimeOffCounts(dk);
-                    const peopleCount = dayPersonCount(dk);
-                    const membersOut = Object.entries(timeOff[dk] || {})
-                      .map(([mid, type]) => ({
-                        member: members.find((m) => m.id === mid),
-                        type,
-                      }))
-                      .filter((x) => x.member);
-                    const baseBg = !inMonth
-                      ? "#F5F5F5"
-                      : isWeekend
-                        ? "#FAFBFF"
-                        : "#fff";
-                    return (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(7, minmax(80px, 1fr))",
+                      background: "#1A1D23",
+                    }}
+                  >
+                    {DOW_LABELS.map((h) => (
                       <div
-                        key={idx}
-                        onClick={() => setDayDetail(dk)}
+                        key={h}
                         style={{
-                          minHeight: 110,
-                          borderRight: "1px solid #EFEFEF",
-                          borderBottom: "1px solid #EFEFEF",
-                          padding: "5px 7px",
-                          background: baseBg,
-                          cursor: "pointer",
-                          transition: "background 0.12s",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = "#EEF3FF";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = baseBg;
+                          padding: "10px 0",
+                          textAlign: "center",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "#9CA3AF",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.5px",
                         }}
                       >
+                        {h}
+                      </div>
+                    ))}
+                  </div>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(7, minmax(80px, 1fr))",
+                    }}
+                  >
+                    {monthCells.map((cellDate, idx) => {
+                      const dk = toKey(cellDate);
+                      const inMonth = cellDate.getMonth() === calMonth;
+                      const isToday = dk === todayKey;
+                      const isWeekend =
+                        cellDate.getDay() === 0 || cellDate.getDay() === 6;
+                      const dayJobList = dayUniqueJobs(dk);
+                      const toCounts = dayTimeOffCounts(dk);
+                      const peopleCount = dayPersonCount(dk);
+                      const membersOut = Object.entries(timeOff[dk] || {})
+                        .map(([mid, type]) => ({
+                          member: members.find((m) => m.id === mid),
+                          type,
+                        }))
+                        .filter((x) => x.member);
+                      const baseBg = !inMonth
+                        ? "#F5F5F5"
+                        : isWeekend
+                          ? "#FAFBFF"
+                          : "#fff";
+                      return (
                         <div
+                          key={idx}
+                          onClick={() => setDayDetail(dk)}
                           style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            marginBottom: 3,
+                            minHeight: 110,
+                            borderRight: "1px solid #EFEFEF",
+                            borderBottom: "1px solid #EFEFEF",
+                            padding: "5px 7px",
+                            background: baseBg,
+                            cursor: "pointer",
+                            transition: "background 0.12s",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "#EEF3FF";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = baseBg;
                           }}
                         >
                           <div
                             style={{
-                              width: 25,
-                              height: 25,
-                              borderRadius: "50%",
                               display: "flex",
+                              justifyContent: "space-between",
                               alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: 12,
-                              fontWeight: isToday ? 800 : 600,
-                              background: isToday ? "#2D6BE4" : "transparent",
-                              color: isToday
-                                ? "#fff"
-                                : inMonth
-                                  ? "#111827"
-                                  : "#C0C7D0",
+                              marginBottom: 3,
                             }}
                           >
-                            {cellDate.getDate()}
+                            <div
+                              style={{
+                                width: 25,
+                                height: 25,
+                                borderRadius: "50%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: 12,
+                                fontWeight: isToday ? 800 : 600,
+                                background: isToday ? "#2D6BE4" : "transparent",
+                                color: isToday
+                                  ? "#fff"
+                                  : inMonth
+                                    ? "#111827"
+                                    : "#C0C7D0",
+                              }}
+                            >
+                              {cellDate.getDate()}
+                            </div>
+                            <div
+                              style={{
+                                display: "flex",
+                                gap: 3,
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              {peopleCount - toCounts.sick - toCounts.vacation >
+                                0 && (
+                                <span
+                                  style={{
+                                    fontSize: 9,
+                                    color: "#6B7280",
+                                    fontWeight: 700,
+                                    background: "#F3F4F6",
+                                    borderRadius: 4,
+                                    padding: "1px 4px",
+                                  }}
+                                >
+                                  {peopleCount -
+                                    toCounts.sick -
+                                    toCounts.vacation}
+                                  👷
+                                </span>
+                              )}
+                              {toCounts.sick > 0 && (
+                                <span
+                                  style={{
+                                    fontSize: 9,
+                                    color: "#DC2626",
+                                    fontWeight: 700,
+                                    background: "#FEF2F2",
+                                    borderRadius: 4,
+                                    padding: "1px 4px",
+                                  }}
+                                >
+                                  {toCounts.sick}🤒
+                                </span>
+                              )}
+                              {toCounts.vacation > 0 && (
+                                <span
+                                  style={{
+                                    fontSize: 9,
+                                    color: "#0891B2",
+                                    fontWeight: 700,
+                                    background: "#ECFEFF",
+                                    borderRadius: 4,
+                                    padding: "1px 4px",
+                                  }}
+                                >
+                                  {toCounts.vacation}🌴
+                                </span>
+                              )}
+                            </div>
                           </div>
                           <div
                             style={{
                               display: "flex",
-                              gap: 3,
-                              flexWrap: "wrap",
+                              flexDirection: "column",
+                              gap: 2,
                             }}
                           >
-                            {peopleCount - toCounts.sick - toCounts.vacation >
-                              0 && (
-                              <span
+                            {dayJobList.slice(0, 2).map((job) => {
+                              const c = CAT[job.category] || CAT["Other"];
+                              const st = mdStats(job);
+                              const crew = dayJobCrew(dk, job.id);
+                              return (
+                                <div
+                                  key={job.id}
+                                  style={{
+                                    background: st.isOver ? "#FEF2F2" : c.light,
+                                    borderLeft: `3px solid ${st.isOver ? "#DC2626" : c.dot}`,
+                                    borderRadius: "0 4px 4px 0",
+                                    padding: "2px 5px",
+                                  }}
+                                >
+                                  <div
+                                    style={{
+                                      fontSize: 10,
+                                      fontWeight: 700,
+                                      color: st.isOver ? "#DC2626" : c.bg,
+                                      whiteSpace: "nowrap",
+                                      overflow: "hidden",
+                                      textOverflow: "ellipsis",
+                                    }}
+                                  >
+                                    {job.name}
+                                  </div>
+                                  {crew.length > 0 && (
+                                    <div
+                                      style={{
+                                        fontSize: 9,
+                                        color: "#6B7280",
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                      }}
+                                    >
+                                      {crew
+                                        .map((m) => m.name.split(" ")[0])
+                                        .join(", ")}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                            {dayJobList.length > 2 && (
+                              <div
                                 style={{
                                   fontSize: 9,
                                   color: "#6B7280",
-                                  fontWeight: 700,
-                                  background: "#F3F4F6",
-                                  borderRadius: 4,
-                                  padding: "1px 4px",
+                                  fontWeight: 600,
+                                  paddingLeft: 3,
                                 }}
                               >
-                                {peopleCount -
-                                  toCounts.sick -
-                                  toCounts.vacation}
-                                👷
-                              </span>
+                                +{dayJobList.length - 2} more
+                              </div>
                             )}
-                            {toCounts.sick > 0 && (
-                              <span
-                                style={{
-                                  fontSize: 9,
-                                  color: "#DC2626",
-                                  fontWeight: 700,
-                                  background: "#FEF2F2",
-                                  borderRadius: 4,
-                                  padding: "1px 4px",
-                                }}
-                              >
-                                {toCounts.sick}🤒
-                              </span>
-                            )}
-                            {toCounts.vacation > 0 && (
-                              <span
-                                style={{
-                                  fontSize: 9,
-                                  color: "#0891B2",
-                                  fontWeight: 700,
-                                  background: "#ECFEFF",
-                                  borderRadius: 4,
-                                  padding: "1px 4px",
-                                }}
-                              >
-                                {toCounts.vacation}🌴
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: 2,
-                          }}
-                        >
-                          {dayJobList.slice(0, 2).map((job) => {
-                            const c = CAT[job.category] || CAT["Other"];
-                            const st = mdStats(job);
-                            const crew = dayJobCrew(dk, job.id);
-                            return (
+                            {membersOut.slice(0, 2).map(({ member, type }) => (
                               <div
-                                key={job.id}
+                                key={member.id}
                                 style={{
-                                  background: st.isOver ? "#FEF2F2" : c.light,
-                                  borderLeft: `3px solid ${st.isOver ? "#DC2626" : c.dot}`,
+                                  background:
+                                    type === "sick" ? "#FEF2F2" : "#ECFEFF",
+                                  borderLeft: `3px solid ${type === "sick" ? "#DC2626" : "#0891B2"}`,
                                   borderRadius: "0 4px 4px 0",
                                   padding: "2px 5px",
                                 }}
@@ -1141,84 +1244,32 @@ export default function App() {
                                   style={{
                                     fontSize: 10,
                                     fontWeight: 700,
-                                    color: st.isOver ? "#DC2626" : c.bg,
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
+                                    color:
+                                      type === "sick" ? "#DC2626" : "#0891B2",
                                   }}
                                 >
-                                  {job.name}
+                                  {type === "sick" ? "🤒" : "🌴"}{" "}
+                                  {member.name.split(" ")[0]}
                                 </div>
-                                {crew.length > 0 && (
-                                  <div
-                                    style={{
-                                      fontSize: 9,
-                                      color: "#6B7280",
-                                      whiteSpace: "nowrap",
-                                      overflow: "hidden",
-                                      textOverflow: "ellipsis",
-                                    }}
-                                  >
-                                    {crew
-                                      .map((m) => m.name.split(" ")[0])
-                                      .join(", ")}
-                                  </div>
-                                )}
                               </div>
-                            );
-                          })}
-                          {dayJobList.length > 2 && (
-                            <div
-                              style={{
-                                fontSize: 9,
-                                color: "#6B7280",
-                                fontWeight: 600,
-                                paddingLeft: 3,
-                              }}
-                            >
-                              +{dayJobList.length - 2} more
-                            </div>
-                          )}
-                          {membersOut.slice(0, 2).map(({ member, type }) => (
-                            <div
-                              key={member.id}
-                              style={{
-                                background:
-                                  type === "sick" ? "#FEF2F2" : "#ECFEFF",
-                                borderLeft: `3px solid ${type === "sick" ? "#DC2626" : "#0891B2"}`,
-                                borderRadius: "0 4px 4px 0",
-                                padding: "2px 5px",
-                              }}
-                            >
+                            ))}
+                            {membersOut.length > 2 && (
                               <div
                                 style={{
-                                  fontSize: 10,
-                                  fontWeight: 700,
-                                  color:
-                                    type === "sick" ? "#DC2626" : "#0891B2",
+                                  fontSize: 9,
+                                  color: "#6B7280",
+                                  fontWeight: 600,
+                                  paddingLeft: 3,
                                 }}
                               >
-                                {type === "sick" ? "🤒" : "🌴"}{" "}
-                                {member.name.split(" ")[0]}
+                                +{membersOut.length - 2} out
                               </div>
-                            </div>
-                          ))}
-                          {membersOut.length > 2 && (
-                            <div
-                              style={{
-                                fontSize: 9,
-                                color: "#6B7280",
-                                fontWeight: 600,
-                                paddingLeft: 3,
-                              }}
-                            >
-                              +{membersOut.length - 2} out
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             )}
@@ -1227,324 +1278,334 @@ export default function App() {
             {calView === "week" && (
               <div
                 style={{
-                  background: "#fff",
+                  overflowX: "auto",
+                  WebkitOverflowScrolling: "touch",
                   borderRadius: 14,
                   border: "1px solid #E5E7EB",
-                  overflow: "hidden",
                   boxShadow: "0 1px 6px rgba(0,0,0,0.05)",
                 }}
               >
                 <div
                   style={{
-                    display: "grid",
-                    gridTemplateColumns: "160px repeat(5, 1fr)",
-                    background: "#1A1D23",
+                    background: "#fff",
+                    borderRadius: 14,
+                    overflow: "hidden",
+                    minWidth: 620,
                   }}
                 >
                   <div
                     style={{
-                      padding: "11px 14px",
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: "#6B7280",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
+                      display: "grid",
+                      gridTemplateColumns: "140px repeat(5, minmax(96px, 1fr))",
+                      background: "#1A1D23",
                     }}
                   >
-                    Member
+                    <div
+                      style={{
+                        padding: "11px 14px",
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: "#6B7280",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                      }}
+                    >
+                      Member
+                    </div>
+                    {weekDays.map((d, i) => {
+                      const isToday = toKey(d) === todayKey;
+                      return (
+                        <div
+                          key={i}
+                          style={{
+                            borderLeft: "1px solid #2A2D35",
+                            padding: "8px 12px",
+                            textAlign: "center",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: 10,
+                              color: "#9CA3AF",
+                              fontWeight: 700,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            {WEEKDAY_LABELS[i]}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 18,
+                              fontWeight: 800,
+                              marginTop: 2,
+                              width: 32,
+                              height: 32,
+                              borderRadius: "50%",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              background: isToday ? "#2D6BE4" : "transparent",
+                              color: "#fff",
+                            }}
+                          >
+                            {d.getDate()}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  {weekDays.map((d, i) => {
-                    const isToday = toKey(d) === todayKey;
+                  {members.map((member, mi) => {
+                    const mc =
+                      MEMBER_COLORS[member.colorIdx % MEMBER_COLORS.length];
                     return (
                       <div
-                        key={i}
+                        key={member.id}
                         style={{
-                          borderLeft: "1px solid #2A2D35",
-                          padding: "8px 12px",
-                          textAlign: "center",
+                          display: "grid",
+                          gridTemplateColumns:
+                            "140px repeat(5, minmax(96px, 1fr))",
+                          borderBottom:
+                            mi < members.length - 1
+                              ? "1px solid #F3F4F6"
+                              : "none",
+                          minHeight: 68,
                         }}
                       >
                         <div
                           style={{
-                            fontSize: 10,
-                            color: "#9CA3AF",
-                            fontWeight: 700,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.5px",
+                            padding: "9px 12px",
+                            display: "flex",
+                            alignItems: "flex-start",
+                            gap: 8,
+                            borderRight: "1px solid #E5E7EB",
                           }}
                         >
-                          {WEEKDAY_LABELS[i]}
+                          <div
+                            style={{
+                              width: 26,
+                              height: 26,
+                              borderRadius: 7,
+                              background: mc.bg,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontWeight: 700,
+                              color: "#fff",
+                              fontSize: 10,
+                              flexShrink: 0,
+                              marginTop: 2,
+                            }}
+                          >
+                            {member.name
+                              .split(" ")
+                              .map((w) => w[0])
+                              .join("")
+                              .slice(0, 2)}
+                          </div>
+                          <div>
+                            <div style={{ fontWeight: 700, fontSize: 12 }}>
+                              {member.name}
+                            </div>
+                            <div style={{ fontSize: 10, color: "#9CA3AF" }}>
+                              {member.hoursPerDay}h/day
+                            </div>
+                          </div>
                         </div>
-                        <div
-                          style={{
-                            fontSize: 18,
-                            fontWeight: 800,
-                            marginTop: 2,
-                            width: 32,
-                            height: 32,
-                            borderRadius: "50%",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            background: isToday ? "#2D6BE4" : "transparent",
-                            color: "#fff",
-                          }}
-                        >
-                          {d.getDate()}
-                        </div>
+                        {weekDays.map((d, di) => {
+                          const dk = toKey(d);
+                          const assignedIds = getAssign(dk, member.id);
+                          const assignedJobs = assignedIds
+                            .map((id) => jobs.find((j) => j.id === id))
+                            .filter(Boolean);
+                          const isToday = dk === todayKey;
+                          const to = getMemberTimeOff(dk, member.id);
+                          const baseCellBg =
+                            to === "sick"
+                              ? "#FFF0F0"
+                              : to === "vacation"
+                                ? "#F0FAFF"
+                                : isToday
+                                  ? "#F8FAFF"
+                                  : "transparent";
+                          return (
+                            <div
+                              key={di}
+                              onClick={() => {
+                                if (!isAdmin) {
+                                  notify(
+                                    "🔒 View only — contact an admin to make changes.",
+                                  );
+                                  return;
+                                }
+                                if (to) {
+                                  setDayDetail(dk);
+                                  return;
+                                }
+                                setAssignForm({
+                                  memberId: member.id,
+                                  jobIds: [...assignedIds],
+                                });
+                                setModal({
+                                  type: "assign",
+                                  dk,
+                                  memberName: member.name,
+                                });
+                              }}
+                              style={{
+                                borderLeft: "1px solid #E5E7EB",
+                                padding: "5px 7px",
+                                cursor: isAdmin ? "pointer" : "default",
+                                background: baseCellBg,
+                                minHeight: 68,
+                                transition: "background 0.1s",
+                              }}
+                              onMouseEnter={(e) => {
+                                if (isAdmin && !to)
+                                  e.currentTarget.style.background = "#F0F4FF";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = baseCellBg;
+                              }}
+                            >
+                              {to === "sick" && (
+                                <div
+                                  style={{
+                                    height: "100%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexDirection: "column",
+                                    gap: 2,
+                                  }}
+                                >
+                                  <span style={{ fontSize: 16 }}>🤒</span>
+                                  <span
+                                    style={{
+                                      fontSize: 10,
+                                      color: "#DC2626",
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    Sick
+                                  </span>
+                                </div>
+                              )}
+                              {to === "vacation" && (
+                                <div
+                                  style={{
+                                    height: "100%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    flexDirection: "column",
+                                    gap: 2,
+                                  }}
+                                >
+                                  <span style={{ fontSize: 16 }}>🌴</span>
+                                  <span
+                                    style={{
+                                      fontSize: 10,
+                                      color: "#0891B2",
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    Vacation
+                                  </span>
+                                </div>
+                              )}
+                              {!to &&
+                                assignedJobs.map((job) => {
+                                  const c = CAT[job.category] || CAT["Other"];
+                                  return (
+                                    <div
+                                      key={job.id}
+                                      style={{
+                                        background: c.light,
+                                        border: `1.5px solid ${c.dot}`,
+                                        borderRadius: 6,
+                                        padding: "3px 6px",
+                                        marginBottom: 2,
+                                        position: "relative",
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <div
+                                        style={{
+                                          display: "flex",
+                                          alignItems: "center",
+                                          gap: 3,
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            width: 5,
+                                            height: 5,
+                                            borderRadius: "50%",
+                                            background: c.dot,
+                                            flexShrink: 0,
+                                          }}
+                                        />
+                                        <span
+                                          style={{
+                                            fontSize: 10,
+                                            fontWeight: 700,
+                                            color: c.bg,
+                                            whiteSpace: "nowrap",
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            maxWidth: 105,
+                                          }}
+                                        >
+                                          {job.name}
+                                        </span>
+                                      </div>
+                                      {isAdmin && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeAssign(dk, member.id, job.id);
+                                          }}
+                                          style={{
+                                            position: "absolute",
+                                            top: 2,
+                                            right: 3,
+                                            background: "none",
+                                            border: "none",
+                                            cursor: "pointer",
+                                            color: "#D1D5DB",
+                                            fontSize: 10,
+                                            padding: 0,
+                                            lineHeight: 1,
+                                          }}
+                                        >
+                                          ×
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              {!to && assignedJobs.length === 0 && (
+                                <div
+                                  style={{
+                                    height: "100%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    color: "#E5E7EB",
+                                    fontSize: 16,
+                                  }}
+                                >
+                                  {isAdmin ? "+" : ""}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     );
                   })}
                 </div>
-                {members.map((member, mi) => {
-                  const mc =
-                    MEMBER_COLORS[member.colorIdx % MEMBER_COLORS.length];
-                  return (
-                    <div
-                      key={member.id}
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "160px repeat(5, 1fr)",
-                        borderBottom:
-                          mi < members.length - 1
-                            ? "1px solid #F3F4F6"
-                            : "none",
-                        minHeight: 68,
-                      }}
-                    >
-                      <div
-                        style={{
-                          padding: "9px 12px",
-                          display: "flex",
-                          alignItems: "flex-start",
-                          gap: 8,
-                          borderRight: "1px solid #E5E7EB",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 26,
-                            height: 26,
-                            borderRadius: 7,
-                            background: mc.bg,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontWeight: 700,
-                            color: "#fff",
-                            fontSize: 10,
-                            flexShrink: 0,
-                            marginTop: 2,
-                          }}
-                        >
-                          {member.name
-                            .split(" ")
-                            .map((w) => w[0])
-                            .join("")
-                            .slice(0, 2)}
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: 12 }}>
-                            {member.name}
-                          </div>
-                          <div style={{ fontSize: 10, color: "#9CA3AF" }}>
-                            {member.hoursPerDay}h/day
-                          </div>
-                        </div>
-                      </div>
-                      {weekDays.map((d, di) => {
-                        const dk = toKey(d);
-                        const assignedIds = getAssign(dk, member.id);
-                        const assignedJobs = assignedIds
-                          .map((id) => jobs.find((j) => j.id === id))
-                          .filter(Boolean);
-                        const isToday = dk === todayKey;
-                        const to = getMemberTimeOff(dk, member.id);
-                        const baseCellBg =
-                          to === "sick"
-                            ? "#FFF0F0"
-                            : to === "vacation"
-                              ? "#F0FAFF"
-                              : isToday
-                                ? "#F8FAFF"
-                                : "transparent";
-                        return (
-                          <div
-                            key={di}
-                            onClick={() => {
-                              if (!isAdmin) {
-                                notify(
-                                  "🔒 View only — contact an admin to make changes.",
-                                );
-                                return;
-                              }
-                              if (to) {
-                                setDayDetail(dk);
-                                return;
-                              }
-                              setAssignForm({
-                                memberId: member.id,
-                                jobIds: [...assignedIds],
-                              });
-                              setModal({
-                                type: "assign",
-                                dk,
-                                memberName: member.name,
-                              });
-                            }}
-                            style={{
-                              borderLeft: "1px solid #E5E7EB",
-                              padding: "5px 7px",
-                              cursor: isAdmin ? "pointer" : "default",
-                              background: baseCellBg,
-                              minHeight: 68,
-                              transition: "background 0.1s",
-                            }}
-                            onMouseEnter={(e) => {
-                              if (isAdmin && !to)
-                                e.currentTarget.style.background = "#F0F4FF";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = baseCellBg;
-                            }}
-                          >
-                            {to === "sick" && (
-                              <div
-                                style={{
-                                  height: "100%",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  flexDirection: "column",
-                                  gap: 2,
-                                }}
-                              >
-                                <span style={{ fontSize: 16 }}>🤒</span>
-                                <span
-                                  style={{
-                                    fontSize: 10,
-                                    color: "#DC2626",
-                                    fontWeight: 700,
-                                  }}
-                                >
-                                  Sick
-                                </span>
-                              </div>
-                            )}
-                            {to === "vacation" && (
-                              <div
-                                style={{
-                                  height: "100%",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  flexDirection: "column",
-                                  gap: 2,
-                                }}
-                              >
-                                <span style={{ fontSize: 16 }}>🌴</span>
-                                <span
-                                  style={{
-                                    fontSize: 10,
-                                    color: "#0891B2",
-                                    fontWeight: 700,
-                                  }}
-                                >
-                                  Vacation
-                                </span>
-                              </div>
-                            )}
-                            {!to &&
-                              assignedJobs.map((job) => {
-                                const c = CAT[job.category] || CAT["Other"];
-                                return (
-                                  <div
-                                    key={job.id}
-                                    style={{
-                                      background: c.light,
-                                      border: `1.5px solid ${c.dot}`,
-                                      borderRadius: 6,
-                                      padding: "3px 6px",
-                                      marginBottom: 2,
-                                      position: "relative",
-                                    }}
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <div
-                                      style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 3,
-                                      }}
-                                    >
-                                      <div
-                                        style={{
-                                          width: 5,
-                                          height: 5,
-                                          borderRadius: "50%",
-                                          background: c.dot,
-                                          flexShrink: 0,
-                                        }}
-                                      />
-                                      <span
-                                        style={{
-                                          fontSize: 10,
-                                          fontWeight: 700,
-                                          color: c.bg,
-                                          whiteSpace: "nowrap",
-                                          overflow: "hidden",
-                                          textOverflow: "ellipsis",
-                                          maxWidth: 105,
-                                        }}
-                                      >
-                                        {job.name}
-                                      </span>
-                                    </div>
-                                    {isAdmin && (
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          removeAssign(dk, member.id, job.id);
-                                        }}
-                                        style={{
-                                          position: "absolute",
-                                          top: 2,
-                                          right: 3,
-                                          background: "none",
-                                          border: "none",
-                                          cursor: "pointer",
-                                          color: "#D1D5DB",
-                                          fontSize: 10,
-                                          padding: 0,
-                                          lineHeight: 1,
-                                        }}
-                                      >
-                                        ×
-                                      </button>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            {!to && assignedJobs.length === 0 && (
-                              <div
-                                style={{
-                                  height: "100%",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  color: "#E5E7EB",
-                                  fontSize: 16,
-                                }}
-                              >
-                                {isAdmin ? "+" : ""}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
               </div>
             )}
 
@@ -2280,6 +2341,51 @@ export default function App() {
           </div>
         )}
       </div>
+
+      {/* Mobile bottom nav bar */}
+      {isMobile && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: "#fff",
+            borderTop: "1px solid #E5E7EB",
+            display: "flex",
+            zIndex: 50,
+            paddingBottom: "env(safe-area-inset-bottom)",
+          }}
+        >
+          {[
+            ["schedule", "📅", "Schedule"],
+            ["jobs", "🗂", "Jobs"],
+            ["members", "👷", "Team"],
+          ].map(([v, icon, label]) => (
+            <button
+              key={v}
+              onClick={() => setMainView(v)}
+              style={{
+                flex: 1,
+                padding: "10px 0 8px",
+                border: "none",
+                background: "none",
+                cursor: "pointer",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 2,
+                color: mainView === v ? "#2D6BE4" : "#9CA3AF",
+                borderTop: `2px solid ${mainView === v ? "#2D6BE4" : "transparent"}`,
+                marginTop: -1,
+              }}
+            >
+              <span style={{ fontSize: 18 }}>{icon}</span>
+              <span style={{ fontSize: 10, fontWeight: 700 }}>{label}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Invite Modal */}
       {showInvite && isAdmin && (
