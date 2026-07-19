@@ -132,6 +132,13 @@ export default function App() {
   const [showAccount, setShowAccount] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
 
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+
   const monthCells = useMemo(
     () => getMonthCells(calYear, calMonth),
     [calYear, calMonth],
@@ -489,111 +496,277 @@ export default function App() {
         style={{
           background: "#fff",
           borderBottom: "1px solid #E5E7EB",
-          padding: "0 24px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          height: 58,
+          padding: isMobile ? "0 14px" : "0 24px",
           position: "sticky",
           top: 0,
           zIndex: 50,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: "linear-gradient(135deg,#2D6BE4,#7C3AED)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: 16,
-            }}
-          >
-            🏗️
+        {/* Top row — always visible */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            height: 52,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                background: "linear-gradient(135deg,#2D6BE4,#7C3AED)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 16,
+              }}
+            >
+              🏗️
+            </div>
+            {!isMobile && (
+              <span
+                style={{ fontWeight: 800, fontSize: 16, letterSpacing: "-0.4px" }}
+              >
+                Master Scheduler
+              </span>
+            )}
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 700,
+                padding: "2px 7px",
+                borderRadius: 5,
+                background: isAdmin ? "#EEF3FF" : "#F3F4F6",
+                color: isAdmin ? "#2D6BE4" : "#6B7280",
+                border: `1px solid ${isAdmin ? "#C7D7FA" : "#E5E7EB"}`,
+              }}
+            >
+              {isAdmin ? "🔑 Admin" : "👁 Viewer"}
+            </span>
           </div>
-          <span
-            style={{ fontWeight: 800, fontSize: 16, letterSpacing: "-0.4px" }}
-          >
-            Master Scheduler
-          </span>
-          <span
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              padding: "2px 7px",
-              borderRadius: 5,
-              background: isAdmin ? "#EEF3FF" : "#F3F4F6",
-              color: isAdmin ? "#2D6BE4" : "#6B7280",
-              border: `1px solid ${isAdmin ? "#C7D7FA" : "#E5E7EB"}`,
-            }}
-          >
-            {isAdmin ? "🔑 Admin" : "👁 Viewer"}
-          </span>
+
+          <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 6 : 8 }}>
+            {/* Desktop nav buttons — hidden on mobile (shown in bottom bar) */}
+            {!isMobile && [
+              ["schedule", "📅 Schedule"],
+              ["jobs", "🗂 Jobs"],
+              ["members", "👷 Team"],
+            ].map(([v, label]) => (
+              <button
+                key={v}
+                onClick={() => setMainView(v)}
+                style={{
+                  padding: "5px 13px",
+                  borderRadius: 7,
+                  border: "none",
+                  background: mainView === v ? "#2D6BE4" : "#F3F4F6",
+                  color: mainView === v ? "#fff" : "#6B7280",
+                  fontWeight: 600,
+                  fontSize: 12,
+                  cursor: "pointer",
+                }}
+              >
+                {label}
+              </button>
+            ))}
+
+            {!isMobile && isAdmin && (
+              <button
+                onClick={() => setShowUsers(true)}
+                style={{
+                  padding: "5px 13px",
+                  borderRadius: 7,
+                  border: "1px solid #E5E7EB",
+                  background: "#fff",
+                  color: "#374151",
+                  fontWeight: 600,
+                  fontSize: 12,
+                  cursor: "pointer",
+                }}
+              >
+                👥 Users
+              </button>
+            )}
+            {!isMobile && isAdmin && (
+              <button
+                onClick={() => setShowInvite(true)}
+                style={{
+                  padding: "5px 13px",
+                  borderRadius: 7,
+                  border: "1.5px solid #0891B2",
+                  background: "#fff",
+                  color: "#0891B2",
+                  fontWeight: 600,
+                  fontSize: 12,
+                  cursor: "pointer",
+                }}
+              >
+                ✉️ Invite
+              </button>
+            )}
+            {!isMobile && (
+              <div style={{ marginLeft: 2 }}>
+                <button
+                  onClick={() => {
+                    triggerDownload(
+                      buildICS(assignments, members, jobs),
+                      "master-schedule.ics",
+                    );
+                    notify("Downloaded — import the .ics into your calendar app.");
+                  }}
+                  style={{
+                    padding: "5px 13px",
+                    borderRadius: 7,
+                    border: "1.5px solid #2D6BE4",
+                    background: "#fff",
+                    color: "#2D6BE4",
+                    fontWeight: 600,
+                    fontSize: 12,
+                    cursor: "pointer",
+                  }}
+                >
+                  ↗ Export
+                </button>
+              </div>
+            )}
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: isMobile ? 6 : 8,
+                marginLeft: isMobile ? 0 : 4,
+                paddingLeft: isMobile ? 0 : 10,
+                borderLeft: isMobile ? "none" : "1px solid #E5E7EB",
+              }}
+            >
+              <div
+                style={{
+                  width: 30,
+                  height: 30,
+                  borderRadius: 8,
+                  background: isAdmin
+                    ? "linear-gradient(135deg,#2D6BE4,#7C3AED)"
+                    : "#E5E7EB",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 800,
+                  color: isAdmin ? "#fff" : "#6B7280",
+                  fontSize: 12,
+                  flexShrink: 0,
+                }}
+              >
+                {currentUser.name.slice(0, 2).toUpperCase()}
+              </div>
+              {!isMobile && (
+                <div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "#374151",
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {currentUser.name}
+                  </div>
+                  {currentUser.email && (
+                    <div
+                      style={{ fontSize: 10, color: "#9CA3AF", lineHeight: 1.2 }}
+                    >
+                      {currentUser.email}
+                    </div>
+                  )}
+                </div>
+              )}
+              <button
+                onClick={() => setShowAccount(true)}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: 6,
+                  border: "1px solid #E5E7EB",
+                  background: "#F3F4F6",
+                  color: "#374151",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                {isMobile ? "⚙️" : "⚙️ Account"}
+              </button>
+              <button
+                onClick={() => supabase.auth.signOut()}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: 6,
+                  border: "1px solid #E5E7EB",
+                  background: "#F3F4F6",
+                  color: "#6B7280",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                {isMobile ? "↩" : "Sign out"}
+              </button>
+            </div>
+          </div>
         </div>
 
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          {[
-            ["schedule", "📅 Schedule"],
-            ["jobs", "🗂 Jobs"],
-            ["members", "👷 Team"],
-          ].map(([v, label]) => (
-            <button
-              key={v}
-              onClick={() => setMainView(v)}
-              style={{
-                padding: "5px 13px",
-                borderRadius: 7,
-                border: "none",
-                background: mainView === v ? "#2D6BE4" : "#F3F4F6",
-                color: mainView === v ? "#fff" : "#6B7280",
-                fontWeight: 600,
-                fontSize: 12,
-                cursor: "pointer",
-              }}
-            >
-              {label}
-            </button>
-          ))}
-
-          {isAdmin && (
-            <button
-              onClick={() => setShowUsers(true)}
-              style={{
-                padding: "5px 13px",
-                borderRadius: 7,
-                border: "1px solid #E5E7EB",
-                background: "#fff",
-                color: "#374151",
-                fontWeight: 600,
-                fontSize: 12,
-                cursor: "pointer",
-              }}
-            >
-              👥 Users
-            </button>
-          )}
-          {isAdmin && (
-            <button
-              onClick={() => setShowInvite(true)}
-              style={{
-                padding: "5px 13px",
-                borderRadius: 7,
-                border: "1.5px solid #0891B2",
-                background: "#fff",
-                color: "#0891B2",
-                fontWeight: 600,
-                fontSize: 12,
-                cursor: "pointer",
-              }}
-            >
-              ✉️ Invite
-            </button>
-          )}
-
-          <div style={{ marginLeft: 2 }}>
+        {/* Mobile action strip — scrollable row of buttons */}
+        {isMobile && (
+          <div
+            style={{
+              display: "flex",
+              gap: 6,
+              overflowX: "auto",
+              paddingBottom: 10,
+              WebkitOverflowScrolling: "touch",
+              scrollbarWidth: "none",
+            }}
+          >
+            {isAdmin && (
+              <button
+                onClick={() => setShowUsers(true)}
+                style={{
+                  padding: "5px 12px",
+                  borderRadius: 7,
+                  border: "1px solid #E5E7EB",
+                  background: "#fff",
+                  color: "#374151",
+                  fontWeight: 600,
+                  fontSize: 12,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              >
+                👥 Users
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                onClick={() => setShowInvite(true)}
+                style={{
+                  padding: "5px 12px",
+                  borderRadius: 7,
+                  border: "1.5px solid #0891B2",
+                  background: "#fff",
+                  color: "#0891B2",
+                  fontWeight: 600,
+                  fontSize: 12,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              >
+                ✉️ Invite
+              </button>
+            )}
             <button
               onClick={() => {
                 triggerDownload(
@@ -603,7 +776,7 @@ export default function App() {
                 notify("Downloaded — import the .ics into your calendar app.");
               }}
               style={{
-                padding: "5px 13px",
+                padding: "5px 12px",
                 borderRadius: 7,
                 border: "1.5px solid #2D6BE4",
                 background: "#fff",
@@ -611,91 +784,14 @@ export default function App() {
                 fontWeight: 600,
                 fontSize: 12,
                 cursor: "pointer",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
               }}
             >
-              ↗ Export
+              ↗ Export .ics
             </button>
           </div>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              marginLeft: 4,
-              paddingLeft: 10,
-              borderLeft: "1px solid #E5E7EB",
-            }}
-          >
-            <div
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 8,
-                background: isAdmin
-                  ? "linear-gradient(135deg,#2D6BE4,#7C3AED)"
-                  : "#E5E7EB",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 800,
-                color: isAdmin ? "#fff" : "#6B7280",
-                fontSize: 12,
-              }}
-            >
-              {currentUser.name.slice(0, 2).toUpperCase()}
-            </div>
-            <div>
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "#374151",
-                  lineHeight: 1.2,
-                }}
-              >
-                {currentUser.name}
-              </div>
-              {currentUser.email && (
-                <div
-                  style={{ fontSize: 10, color: "#9CA3AF", lineHeight: 1.2 }}
-                >
-                  {currentUser.email}
-                </div>
-              )}
-            </div>
-            <button
-              onClick={() => setShowAccount(true)}
-              style={{
-                padding: "4px 10px",
-                borderRadius: 6,
-                border: "1px solid #E5E7EB",
-                background: "#F3F4F6",
-                color: "#374151",
-                fontSize: 11,
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              ⚙️ Account
-            </button>
-            <button
-              onClick={() => supabase.auth.signOut()}
-              style={{
-                padding: "4px 10px",
-                borderRadius: 6,
-                border: "1px solid #E5E7EB",
-                background: "#F3F4F6",
-                color: "#6B7280",
-                fontSize: 11,
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              Sign out
-            </button>
-          </div>
-        </div>
+        )}
       </div>
 
       {!isAdmin && (
