@@ -288,6 +288,34 @@ export default function App() {
     setModal(null);
     notify("Job added.");
   }
+  function doEditJob(updated) {
+    if (!requireAdmin()) return;
+    if (!updated.name.trim()) return;
+    setJobs((prev) =>
+      prev.map((j) =>
+        j.id === updated.id ? { ...updated, name: updated.name.trim() } : j,
+      ),
+    );
+    setModal(null);
+    notify("Job updated.");
+  }
+  function doDeleteJob(jid) {
+    if (!requireAdmin()) return;
+    setJobs((prev) => prev.filter((j) => j.id !== jid));
+    setAssignments((prev) => {
+      const next = {};
+      for (const [dk, day] of Object.entries(prev)) {
+        const nextDay = {};
+        for (const [mid, jids] of Object.entries(day)) {
+          const filtered = jids.filter((id) => id !== jid);
+          if (filtered.length > 0) nextDay[mid] = filtered;
+        }
+        if (Object.keys(nextDay).length > 0) next[dk] = nextDay;
+      }
+      return next;
+    });
+    notify("Job deleted.");
+  }
   function updateNotes(jid, notes) {
     if (!requireAdmin()) return;
     setJobs((prev) => prev.map((j) => (j.id === jid ? { ...j, notes } : j)));
@@ -306,6 +334,34 @@ export default function App() {
     });
     setModal(null);
     notify("Member added.");
+  }
+
+  function doEditMember(updated) {
+    if (!requireAdmin()) return;
+    if (!updated.name.trim()) return;
+    setMembers((prev) =>
+      prev.map((m) =>
+        m.id === updated.id ? { ...updated, name: updated.name.trim() } : m,
+      ),
+    );
+    setModal(null);
+    notify("Member updated.");
+  }
+
+  function doDeleteMember(mid) {
+    if (!requireAdmin()) return;
+    setMembers((prev) => prev.filter((m) => m.id !== mid));
+    setAssignments((prev) => {
+      const next = { ...prev };
+      Object.keys(next).forEach((wk) => {
+        Object.keys(next[wk]).forEach((jid) => {
+          next[wk][jid] = (next[wk][jid] || []).filter((id) => id !== mid);
+        });
+      });
+      return next;
+    });
+    setModal(null);
+    notify("Member deleted.");
   }
 
   function prevMonth() {
@@ -1541,6 +1597,49 @@ export default function App() {
                           {job.category}
                         </span>
                       </div>
+                      {isAdmin && (
+                        <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                          <button
+                            onClick={() =>
+                              setModal({ type: "editJob", job: { ...job } })
+                            }
+                            style={{
+                              padding: "3px 9px",
+                              borderRadius: 6,
+                              border: "1px solid #E5E7EB",
+                              background: "#fff",
+                              color: "#374151",
+                              fontSize: 11,
+                              fontWeight: 600,
+                              cursor: "pointer",
+                            }}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  `Delete "${job.name}"? This will also clear all its assignments.`,
+                                )
+                              )
+                                doDeleteJob(job.id);
+                            }}
+                            style={{
+                              padding: "3px 9px",
+                              borderRadius: 6,
+                              border: "none",
+                              background: "#FEF2F2",
+                              color: "#DC2626",
+                              fontSize: 11,
+                              fontWeight: 700,
+                              cursor: "pointer",
+                            }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div style={{ marginBottom: 10 }}>
                       <div
@@ -1893,7 +1992,7 @@ export default function App() {
                     <div
                       style={{
                         display: "flex",
-                        alignItems: "center",
+                        alignItems: "flex-start",
                         gap: 10,
                         marginBottom: 14,
                       }}
@@ -1910,6 +2009,7 @@ export default function App() {
                           fontWeight: 800,
                           color: "#fff",
                           fontSize: 15,
+                          flexShrink: 0,
                         }}
                       >
                         {member.name
@@ -1918,7 +2018,7 @@ export default function App() {
                           .join("")
                           .slice(0, 2)}
                       </div>
-                      <div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: 700, fontSize: 15 }}>
                           {member.name}
                         </div>
@@ -1926,6 +2026,47 @@ export default function App() {
                           {member.hoursPerDay}h/day · {maxWk}h/wk max
                         </div>
                       </div>
+                      {isAdmin && (
+                        <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                          <button
+                            onClick={() =>
+                              setModal({
+                                type: "editMember",
+                                member: { ...member },
+                              })
+                            }
+                            style={{
+                              padding: "3px 9px",
+                              borderRadius: 6,
+                              border: "1px solid #E5E7EB",
+                              background: "#fff",
+                              color: "#374151",
+                              fontSize: 11,
+                              fontWeight: 600,
+                              cursor: "pointer",
+                            }}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() =>
+                              setModal({ type: "deleteMember", member })
+                            }
+                            style={{
+                              padding: "3px 9px",
+                              borderRadius: 6,
+                              border: "none",
+                              background: "#FEF2F2",
+                              color: "#DC2626",
+                              fontSize: 11,
+                              fontWeight: 600,
+                              cursor: "pointer",
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      )}
                     </div>
                     <div
                       style={{
@@ -2015,26 +2156,6 @@ export default function App() {
                       >
                         {maxWk - usedWk}h available
                       </div>
-                      {isAdmin && (
-                        <button
-                          onClick={() =>
-                            setMembers((prev) =>
-                              prev.filter((m) => m.id !== member.id),
-                            )
-                          }
-                          style={{
-                            padding: "6px 10px",
-                            borderRadius: 8,
-                            background: "#FEF2F2",
-                            color: "#DC2626",
-                            border: "none",
-                            cursor: "pointer",
-                            fontSize: 12,
-                          }}
-                        >
-                          ×
-                        </button>
-                      )}
                     </div>
                   </div>
                 );
@@ -2586,6 +2707,7 @@ export default function App() {
       )}
 
       {/* Add Job Modal */}
+      {/* Add Job Modal */}
       {modal?.type === "addJob" && isAdmin && (
         <ModalWrap onClose={() => setModal(null)}>
           <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 16 }}>
@@ -2648,6 +2770,188 @@ export default function App() {
             </button>
             <button onClick={doAddJob} style={S.blueBtn}>
               Add Job
+            </button>
+          </div>
+        </ModalWrap>
+      )}
+
+      {/* Edit Job Modal */}
+      {modal?.type === "editJob" && isAdmin && (
+        <ModalWrap onClose={() => setModal(null)}>
+          <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 16 }}>
+            Edit Job
+          </div>
+          <LabelField label="Job Name">
+            <input
+              value={modal.job.name}
+              onChange={(e) =>
+                setModal((m) => ({
+                  ...m,
+                  job: { ...m.job, name: e.target.value },
+                }))
+              }
+              style={S.input}
+              autoFocus
+            />
+          </LabelField>
+          <LabelField label="Category">
+            <select
+              value={modal.job.category}
+              onChange={(e) =>
+                setModal((m) => ({
+                  ...m,
+                  job: { ...m.job, category: e.target.value },
+                }))
+              }
+              style={S.input}
+            >
+              {JOB_CATEGORIES.map((c) => (
+                <option key={c}>{c}</option>
+              ))}
+            </select>
+          </LabelField>
+          <LabelField label="Mann Days (MD)">
+            <input
+              type="number"
+              value={modal.job.mannDays}
+              onChange={(e) =>
+                setModal((m) => ({
+                  ...m,
+                  job: { ...m.job, mannDays: Number(e.target.value) },
+                }))
+              }
+              min={1}
+              max={500}
+              style={S.input}
+            />
+          </LabelField>
+          <div style={{ fontSize: 11, color: "#9CA3AF", marginBottom: 14 }}>
+            1 MD = 1 person × 1 full day. {modal.job.mannDays} MD ≈{" "}
+            {modal.job.mannDays * 8} labor hours.
+          </div>
+          <LabelField label="Notes">
+            <textarea
+              value={modal.job.notes || ""}
+              onChange={(e) =>
+                setModal((m) => ({
+                  ...m,
+                  job: { ...m.job, notes: e.target.value },
+                }))
+              }
+              rows={3}
+              style={{ ...S.input, resize: "vertical", lineHeight: 1.5 }}
+            />
+          </LabelField>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => setModal(null)} style={S.cancelBtn}>
+              Cancel
+            </button>
+            <button onClick={() => doEditJob(modal.job)} style={S.blueBtn}>
+              Save Changes
+            </button>
+          </div>
+        </ModalWrap>
+      )}
+
+      {/* Edit Member Modal */}
+      {modal?.type === "editMember" && isAdmin && (
+        <ModalWrap onClose={() => setModal(null)}>
+          <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 16 }}>
+            Edit Team Member
+          </div>
+          <LabelField label="Name">
+            <input
+              value={modal.member.name}
+              onChange={(e) =>
+                setModal((m) => ({
+                  ...m,
+                  member: { ...m.member, name: e.target.value },
+                }))
+              }
+              placeholder="Full name"
+              style={S.input}
+              autoFocus
+            />
+          </LabelField>
+          <LabelField label="Hours per Day">
+            <input
+              type="number"
+              value={modal.member.hoursPerDay}
+              onChange={(e) =>
+                setModal((m) => ({
+                  ...m,
+                  member: { ...m.member, hoursPerDay: Number(e.target.value) },
+                }))
+              }
+              min={1}
+              max={16}
+              style={S.input}
+            />
+          </LabelField>
+          <LabelField label="Color">
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {MEMBER_COLORS.map((c, i) => (
+                <button
+                  key={i}
+                  onClick={() =>
+                    setModal((m) => ({
+                      ...m,
+                      member: { ...m.member, colorIdx: i },
+                    }))
+                  }
+                  style={{
+                    width: 26,
+                    height: 26,
+                    borderRadius: "50%",
+                    background: c.bg,
+                    border:
+                      modal.member.colorIdx === i
+                        ? "3px solid #111827"
+                        : "2px solid transparent",
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                />
+              ))}
+            </div>
+          </LabelField>
+          <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+            <button onClick={() => setModal(null)} style={S.cancelBtn}>
+              Cancel
+            </button>
+            <button
+              onClick={() => doEditMember(modal.member)}
+              style={S.blueBtn}
+            >
+              Save Changes
+            </button>
+          </div>
+        </ModalWrap>
+      )}
+
+      {/* Delete Member Confirmation Modal */}
+      {modal?.type === "deleteMember" && isAdmin && (
+        <ModalWrap onClose={() => setModal(null)}>
+          <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 12 }}>
+            Delete Team Member
+          </div>
+          <p style={{ color: "#6B7280", fontSize: 14, marginBottom: 20 }}>
+            Are you sure you want to remove <strong>{modal.member.name}</strong>
+            ? This will also clear all of their schedule assignments.
+          </p>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => setModal(null)} style={S.cancelBtn}>
+              Cancel
+            </button>
+            <button
+              onClick={() => doDeleteMember(modal.member.id)}
+              style={{
+                ...S.blueBtn,
+                background: "#DC2626",
+                borderColor: "#DC2626",
+              }}
+            >
+              Delete
             </button>
           </div>
         </ModalWrap>
