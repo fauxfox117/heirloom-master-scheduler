@@ -30,6 +30,14 @@ export function SignupScreen({ invite, onSignup, onBackToLogin }) {
     });
     if (signUpError) return setError(signUpError.message);
 
+    if (!data.session) {
+      return setError(
+        "A confirmation email was sent to " +
+          email.trim().toLowerCase() +
+          ". Please confirm your email, then sign in. Ask your admin to disable email confirmation in Supabase Auth settings if this is unexpected.",
+      );
+    }
+
     const { error: profileError } = await supabase.from("profiles").insert({
       id: data.user.id,
       name: name.trim(),

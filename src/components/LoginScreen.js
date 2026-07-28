@@ -32,7 +32,9 @@ export function LoginScreen({ onSignupWithInvite }) {
       .eq("used", false)
       .maybeSingle();
     setLoading(false);
-    if (fetchError || !invite)
+    if (fetchError)
+      return setError(`Error: ${fetchError.message} (${fetchError.code})`);
+    if (!invite)
       return setError(
         "Invalid or already-used invite code. Contact your admin.",
       );
