@@ -35,6 +35,7 @@ export default function App() {
   const [invites, setInvites] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [authError, setAuthError] = useState("");
   const isAdmin = currentUser?.role === "admin";
 
   const [pendingInvite, setPendingInvite] = useState(null);
@@ -65,12 +66,13 @@ export default function App() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fetchProfile(authUser) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", authUser.id)
-      .single();
+      .maybeSingle();
     if (data) {
+      setAuthError("");
       setCurrentUser({
         id: authUser.id,
         email: authUser.email,
@@ -82,6 +84,17 @@ export default function App() {
         fetchAllUsers();
         fetchAllInvites();
       }
+    } else if (error) {
+      // Query failed (RLS, network, etc.) — surface it instead of looping silently
+      console.error("fetchProfile failed:", error);
+      setAuthError(
+        "Signed in, but couldn't load your profile. Please try again.",
+      );
+      await supabase.auth.signOut();
+    } else {
+      // Query succeeded but no profile row exists — sign them out cleanly
+      setAuthError("");
+      await supabase.auth.signOut();
     }
     setAuthLoading(false);
   }
@@ -458,7 +471,10 @@ export default function App() {
 
   if (!currentUser)
     return (
-      <LoginScreen onSignupWithInvite={(invite) => setPendingInvite(invite)} />
+      <LoginScreen
+        onSignupWithInvite={(invite) => setPendingInvite(invite)}
+        authError={authError}
+      />
     );
 
   return (

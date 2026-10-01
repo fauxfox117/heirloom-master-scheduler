@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../supabaseClient";
 
-export function LoginScreen({ onSignupWithInvite }) {
+export function LoginScreen({ onSignupWithInvite, authError }) {
   const [tab, setTab] = useState("signin");
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
@@ -220,7 +220,7 @@ export function LoginScreen({ onSignupWithInvite }) {
                   </button>
                 </div>
               </div>
-              {error && (
+              {(error || authError) && (
                 <div
                   style={{
                     background: "#FEF2F2",
@@ -233,7 +233,7 @@ export function LoginScreen({ onSignupWithInvite }) {
                     marginBottom: 14,
                   }}
                 >
-                  ⚠ {error}
+                  ⚠ {error || authError}
                 </div>
               )}
               <button

@@ -79,7 +79,9 @@ create table invites (
 );
 ```
 
-Row Level Security is enabled on both tables. A `get_my_role()` security-definer function is used to avoid recursive policy evaluation.
+Row Level Security is enabled on both tables. A `get_my_role()` security-definer function is used to avoid recursive policy evaluation. Run [supabase/sql/harden_get_my_role.sql](supabase/sql/harden_get_my_role.sql) in the SQL Editor so only `authenticated` (not `anon`) can call it, and its `search_path` is pinned.
+
+Also enable **Leaked Password Protection** under Authentication → Policies → Password Security in the Supabase Dashboard — it's disabled by default and checks new passwords against HaveIBeenPwned.
 
 ## User Roles
 
