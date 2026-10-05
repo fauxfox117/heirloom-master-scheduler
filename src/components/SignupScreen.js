@@ -31,10 +31,17 @@ export function SignupScreen({ invite, onSignup, onBackToLogin }) {
     if (signUpError) return setError(signUpError.message);
 
     if (!data.session) {
+      // Supabase returns no session (and no error) when the email already
+      // has an account, to avoid leaking which emails are registered.
+      if (data.user && data.user.identities?.length === 0) {
+        return setError(
+          "An account with this email already exists. Try signing in instead, or contact your admin for help.",
+        );
+      }
       return setError(
         "A confirmation email was sent to " +
           email.trim().toLowerCase() +
-          ". Please confirm your email, then sign in. Ask your admin to disable email confirmation in Supabase Auth settings if this is unexpected.",
+          ". Please confirm your email, then sign in.",
       );
     }
 
