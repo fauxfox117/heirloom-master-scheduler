@@ -27,7 +27,17 @@ export function SignupScreen({ invite, onSignup, onBackToLogin }) {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password: pw,
+      options: {
+        data: {
+          name: name.trim(),
+          username: username.trim().toLowerCase(),
+          invite_token: invite.token,
+        },
+      },
     });
+    // The profile row and invite redemption are handled atomically by a
+    // database trigger (see supabase/sql/auto_create_profile_on_signup.sql),
+    // so a signUp error here means the whole signup failed cleanly.
     if (signUpError) return setError(signUpError.message);
 
     if (!data.session) {
@@ -44,20 +54,6 @@ export function SignupScreen({ invite, onSignup, onBackToLogin }) {
           ". Please confirm your email, then sign in.",
       );
     }
-
-    const { error: profileError } = await supabase.from("profiles").insert({
-      id: data.user.id,
-      name: name.trim(),
-      username: username.trim().toLowerCase(),
-      email: email.trim().toLowerCase(),
-      role: invite.role,
-    });
-    if (profileError) return setError(profileError.message);
-
-    await supabase
-      .from("invites")
-      .update({ used: true })
-      .eq("token", invite.token);
 
     onSignup();
   }
