@@ -11,12 +11,23 @@ export const MEMBER_COLORS = [
   { bg: "#7C3AED", light: "#F5F3FF" },
 ];
 
-export const JOB_CATEGORIES = ["Metal Fab", "Install", "Stair", "Other"];
+export const JOB_CATEGORIES = [
+  "Metal Fab",
+  "Install",
+  "Stair",
+  "Punch List",
+  "Repair",
+  "Measure",
+  "Other",
+];
 
 export const CAT = {
   "Metal Fab": { bg: "#1E40AF", light: "#DBEAFE", dot: "#3B82F6", icon: "🔩" },
   Install: { bg: "#065F46", light: "#D1FAE5", dot: "#10B981", icon: "🔧" },
   Stair: { bg: "#7C2D12", light: "#FEF3C7", dot: "#F59E0B", icon: "🪜" },
+  "Punch List": { bg: "#6B21A8", light: "#F3E8FF", dot: "#A855F7", icon: "📋" },
+  Repair: { bg: "#9A3412", light: "#FFEDD5", dot: "#F97316", icon: "🛠️" },
+  Measure: { bg: "#155E75", light: "#CFFAFE", dot: "#06B6D4", icon: "📏" },
   Other: { bg: "#374151", light: "#F3F4F6", dot: "#9CA3AF", icon: "📋" },
 };
 

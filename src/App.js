@@ -192,6 +192,7 @@ export default function App() {
 
   const [mainView, setMainView] = useState("schedule");
   const [calView, setCalView] = useState("month");
+  const [monthDense, setMonthDense] = useState(false);
 
   const [calYear, setCalYear] = useState(today.getFullYear());
   const [calMonth, setCalMonth] = useState(today.getMonth());
@@ -231,9 +232,9 @@ export default function App() {
   const [showAccount, setShowAccount] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
 
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1100);
   useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 768);
+    const handler = () => setIsMobile(window.innerWidth < 1100);
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, []);
@@ -1242,7 +1243,15 @@ export default function App() {
 
                 {calView === "month" ? (
                   <div
-                    style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      flexWrap: isMobile ? "wrap" : "nowrap",
+                      width: isMobile ? "100%" : "auto",
+                      maxWidth: isMobile ? 420 : "none",
+                    }}
                   >
                     <button onClick={prevMonth} style={S.navBtn}>
                       ‹
@@ -1251,7 +1260,7 @@ export default function App() {
                       style={{
                         fontWeight: 800,
                         fontSize: 17,
-                        minWidth: 170,
+                        minWidth: isMobile ? 130 : 170,
                         textAlign: "center",
                       }}
                     >
@@ -1270,10 +1279,33 @@ export default function App() {
                     >
                       Today
                     </button>
+                    <button
+                      type="button"
+                      aria-pressed={monthDense}
+                      title="Show more jobs in each month cell"
+                      onClick={() => setMonthDense((dense) => !dense)}
+                      style={{
+                        ...S.navBtn,
+                        borderColor: monthDense ? "#2D6BE4" : "#D1D5DB",
+                        background: monthDense ? "#EEF3FF" : "#fff",
+                        color: monthDense ? "#2D6BE4" : "#374151",
+                        fontWeight: 700,
+                      }}
+                    >
+                      Compact
+                    </button>
                   </div>
                 ) : (
                   <div
-                    style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 6,
+                      flexWrap: isMobile ? "wrap" : "nowrap",
+                      width: isMobile ? "100%" : "auto",
+                      maxWidth: isMobile ? 420 : "none",
+                    }}
                   >
                     <button
                       onClick={() => setWeekStart((d) => addDays(d, -7))}
@@ -1284,8 +1316,8 @@ export default function App() {
                     <span
                       style={{
                         fontWeight: 800,
-                        fontSize: 15,
-                        minWidth: 210,
+                        fontSize: isMobile ? 13 : 15,
+                        minWidth: isMobile ? 145 : 210,
                         textAlign: "center",
                       }}
                     >
@@ -1387,6 +1419,7 @@ export default function App() {
                       const isWeekend =
                         cellDate.getDay() === 0 || cellDate.getDay() === 6;
                       const dayJobList = dayUniqueJobs(dk);
+                      const visibleJobCount = monthDense ? 5 : 2;
                       const toCounts = dayTimeOffCounts(dk);
                       const peopleCount = dayPersonCount(dk);
                       const membersOut = Object.entries(timeOff[dk] || {})
@@ -1405,10 +1438,10 @@ export default function App() {
                           key={idx}
                           onClick={() => setDayDetail(dk)}
                           style={{
-                            minHeight: 110,
+                            minHeight: monthDense ? 88 : 110,
                             borderRight: "1px solid #EFEFEF",
                             borderBottom: "1px solid #EFEFEF",
-                            padding: "5px 7px",
+                            padding: monthDense ? "3px 4px" : "5px 7px",
                             background: baseBg,
                             cursor: "pointer",
                             transition: "background 0.12s",
@@ -1507,10 +1540,10 @@ export default function App() {
                             style={{
                               display: "flex",
                               flexDirection: "column",
-                              gap: 2,
+                              gap: monthDense ? 1 : 2,
                             }}
                           >
-                            {dayJobList.slice(0, 2).map((job) => {
+                            {dayJobList.slice(0, visibleJobCount).map((job) => {
                               const c = CAT[job.category] || CAT["Other"];
                               const st = mdStats(job);
                               const crew = dayJobCrew(dk, job.id);
@@ -1521,12 +1554,12 @@ export default function App() {
                                     background: st.isOver ? "#FEF2F2" : c.light,
                                     borderLeft: `3px solid ${st.isOver ? "#DC2626" : c.dot}`,
                                     borderRadius: "0 4px 4px 0",
-                                    padding: "2px 5px",
+                                    padding: monthDense ? "1px 3px" : "2px 5px",
                                   }}
                                 >
                                   <div
                                     style={{
-                                      fontSize: 10,
+                                      fontSize: monthDense ? 9 : 10,
                                       fontWeight: 700,
                                       color: st.isOver ? "#DC2626" : c.bg,
                                       whiteSpace: "nowrap",
@@ -1539,7 +1572,7 @@ export default function App() {
                                   {crew.length > 0 && (
                                     <div
                                       style={{
-                                        fontSize: 9,
+                                        fontSize: monthDense ? 8 : 9,
                                         color: "#6B7280",
                                         whiteSpace: "nowrap",
                                         overflow: "hidden",
@@ -1557,7 +1590,7 @@ export default function App() {
                                 </div>
                               );
                             })}
-                            {dayJobList.length > 2 && (
+                            {dayJobList.length > visibleJobCount && (
                               <div
                                 style={{
                                   fontSize: 9,
@@ -1566,7 +1599,7 @@ export default function App() {
                                   paddingLeft: 3,
                                 }}
                               >
-                                +{dayJobList.length - 2} more
+                                +{dayJobList.length - visibleJobCount} more
                               </div>
                             )}
                             {membersOut.slice(0, 2).map(({ member, type }) => (
@@ -1630,13 +1663,15 @@ export default function App() {
                     background: "#fff",
                     borderRadius: 14,
                     overflow: "hidden",
-                    minWidth: 620,
+                    minWidth: isMobile ? 472 : 620,
                   }}
                 >
                   <div
                     style={{
                       display: "grid",
-                      gridTemplateColumns: "140px repeat(5, minmax(96px, 1fr))",
+                      gridTemplateColumns: isMobile
+                        ? "112px repeat(5, minmax(72px, 1fr))"
+                        : "140px repeat(5, minmax(96px, 1fr))",
                       background: "#1A1D23",
                     }}
                   >
@@ -1704,7 +1739,9 @@ export default function App() {
                         style={{
                           display: "grid",
                           gridTemplateColumns:
-                            "140px repeat(5, minmax(96px, 1fr))",
+                            isMobile
+                              ? "112px repeat(5, minmax(72px, 1fr))"
+                              : "140px repeat(5, minmax(96px, 1fr))",
                           borderBottom:
                             mi < members.length - 1
                               ? "1px solid #F3F4F6"
@@ -1744,7 +1781,12 @@ export default function App() {
                               .slice(0, 2)}
                           </div>
                           <div>
-                            <div style={{ fontWeight: 700, fontSize: 12 }}>
+                            <div
+                              style={{
+                                fontWeight: 700,
+                                fontSize: isMobile ? 11 : 12,
+                              }}
+                            >
                               {member.name}
                             </div>
                             <div style={{ fontSize: 10, color: "#9CA3AF" }}>

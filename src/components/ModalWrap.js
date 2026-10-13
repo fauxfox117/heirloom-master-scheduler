@@ -18,7 +18,8 @@ export function ModalWrap({ children, onClose }) {
         style={{
           background: "#fff",
           borderRadius: 16,
-          padding: "24px 28px",
+          boxSizing: "border-box",
+          padding: "24px clamp(18px, 5vw, 28px)",
           width: "100%",
           maxWidth: 480,
           boxShadow: "0 24px 64px rgba(0,0,0,0.18)",
