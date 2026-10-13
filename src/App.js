@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { supabase } from "./supabaseClient";
 import {
   MEMBER_COLORS,
@@ -6,8 +6,6 @@ import {
   CAT,
   DOW_LABELS,
   WEEKDAY_LABELS,
-  INIT_MEMBERS,
-  INIT_JOBS,
 } from "./constants";
 import {
   toKey,
@@ -84,6 +82,7 @@ export default function App() {
         fetchAllUsers();
         fetchAllInvites();
       }
+      fetchSchedule();
     } else if (error) {
       // Query failed (RLS, network, etc.) — surface it instead of looping silently
       console.error("fetchProfile failed:", error);
@@ -112,6 +111,85 @@ export default function App() {
     if (data) setInvites(data);
   }
 
+  async function fetchMembers() {
+    const { data, error } = await supabase
+      .from("members")
+      .select("*")
+      .order("name");
+    if (error) {
+      console.error("fetchMembers failed:", error);
+      return;
+    }
+    setMembers(
+      data.map((m) => ({
+        id: m.id,
+        name: m.name,
+        colorIdx: m.color_idx,
+        hoursPerDay: m.hours_per_day,
+      })),
+    );
+  }
+
+  async function fetchJobs() {
+    const { data, error } = await supabase
+      .from("jobs")
+      .select("*")
+      .order("created_at");
+    if (error) {
+      console.error("fetchJobs failed:", error);
+      return;
+    }
+    setJobs(
+      data.map((j) => ({
+        id: j.id,
+        name: j.name,
+        category: j.category,
+        mannDays: Number(j.mann_days),
+        notes: j.notes || "",
+      })),
+    );
+  }
+
+  async function fetchAssignments() {
+    const { data, error } = await supabase.from("assignments").select("*");
+    if (error) {
+      console.error("fetchAssignments failed:", error);
+      return;
+    }
+    const next = {};
+    for (const row of data) {
+      const day = (next[row.day] ||= {});
+      (day[row.member_id] ||= []).push({
+        jobId: row.job_id,
+        portion: Number(row.portion),
+      });
+    }
+    setAssignments(next);
+  }
+
+  async function fetchTimeOff() {
+    const { data, error } = await supabase.from("time_off").select("*");
+    if (error) {
+      console.error("fetchTimeOff failed:", error);
+      return;
+    }
+    const next = {};
+    for (const row of data) {
+      (next[row.day] ||= {})[row.member_id] = row.type;
+    }
+    setTimeOff(next);
+  }
+
+  async function fetchSchedule() {
+    await Promise.all([
+      fetchMembers(),
+      fetchJobs(),
+      fetchAssignments(),
+      fetchTimeOff(),
+    ]);
+    setScheduleLoading(false);
+  }
+
   const [mainView, setMainView] = useState("schedule");
   const [calView, setCalView] = useState("month");
 
@@ -120,13 +198,21 @@ export default function App() {
 
   const [weekStart, setWeekStart] = useState(() => getMondayOfWeek(today));
 
-  const [members, setMembers] = useState(INIT_MEMBERS);
-  const [jobs, setJobs] = useState(INIT_JOBS);
+  const [members, setMembers] = useState([]);
+  const [jobs, setJobs] = useState([]);
   const [assignments, setAssignments] = useState({});
   const [timeOff, setTimeOff] = useState({});
+  const [scheduleLoading, setScheduleLoading] = useState(true);
+  const notesTimers = useRef({});
 
   const [modal, setModal] = useState(null);
-  const [assignForm, setAssignForm] = useState({ memberId: "", jobIds: [] });
+  const [assignForm, setAssignForm] = useState({
+    memberId: "",
+    jobIds: [],
+    portions: {},
+  });
+  const [crewForm, setCrewForm] = useState({ jobId: "", portions: {} });
+  const [crewJobId, setCrewJobId] = useState("");
   const [newJob, setNewJob] = useState({
     name: "",
     category: "Metal Fab",
@@ -151,6 +237,35 @@ export default function App() {
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, []);
+
+  // Keeps jobs/members/assignments/time-off in sync across devices.
+  useEffect(() => {
+    if (!currentUser) return;
+    const channel = supabase
+      .channel("schedule-sync")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "members" },
+        fetchMembers,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "jobs" },
+        fetchJobs,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "assignments" },
+        fetchAssignments,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "time_off" },
+        fetchTimeOff,
+      )
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [currentUser]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const monthCells = useMemo(
     () => getMonthCells(calYear, calMonth),
@@ -186,42 +301,109 @@ export default function App() {
     return false;
   }
 
+  function getPersonAssignments(dk, mid) {
+    return (assignments[dk]?.[mid] || []).map((assignment) =>
+      typeof assignment === "string"
+        ? { jobId: assignment, portion: 1 }
+        : assignment,
+    );
+  }
   function getAssign(dk, mid) {
-    return assignments[dk]?.[mid] || [];
+    return getPersonAssignments(dk, mid).map((assignment) => assignment.jobId);
   }
-  function setAssign(dk, mid, jids) {
-    setAssignments((prev) => ({
-      ...prev,
-      [dk]: { ...(prev[dk] || {}), [mid]: jids },
-    }));
+  function getAssignmentPortion(dk, mid, jid) {
+    return (
+      getPersonAssignments(dk, mid).find(
+        (assignment) => assignment.jobId === jid,
+      )?.portion ?? 1
+    );
   }
-  function removeAssign(dk, mid, jid) {
+
+  async function setAssign(dk, mid, assignmentsToSave) {
     if (!requireAdmin()) return;
-    setAssignments((prev) => {
-      const day = { ...(prev[dk] || {}) };
-      day[mid] = (day[mid] || []).filter((id) => id !== jid);
-      return { ...prev, [dk]: day };
-    });
+
+    const desired = assignmentsToSave.map((item) =>
+      typeof item === "string" ? { jobId: item, portion: 1 } : item,
+    );
+    const previous = getPersonAssignments(dk, mid);
+    const totalPortion = desired.reduce(
+      (total, assignment) => total + Number(assignment.portion || 1),
+      0,
+    );
+    if (totalPortion > 1) {
+      notify("A person's assignments cannot exceed one day.");
+      return false;
+    }
+    const desiredIds = new Set(desired.map((item) => item.jobId));
+    const removedIds = previous
+      .filter((item) => !desiredIds.has(item.jobId))
+      .map((item) => item.jobId);
+
+    if (desired.length) {
+      const { error } = await supabase.from("assignments").upsert(
+        desired.map(({ jobId, portion = 1 }) => ({
+          day: dk,
+          member_id: mid,
+          job_id: jobId,
+          portion,
+        })),
+        { onConflict: "day,member_id,job_id" },
+      );
+
+      if (error) {
+        console.error("setAssign upsert failed:", error);
+        notify("Couldn't update assignments.");
+        return;
+      }
+    }
+
+    if (removedIds.length) {
+      const { error } = await supabase
+        .from("assignments")
+        .delete()
+        .eq("day", dk)
+        .eq("member_id", mid)
+        .in("job_id", removedIds);
+
+      if (error) {
+        console.error("setAssign delete failed:", error);
+        notify("Couldn't update assignments.");
+        return;
+      }
+    }
+
+    await fetchAssignments();
+    return true;
+  }
+  async function removeAssign(dk, mid, jid) {
+    if (!requireAdmin()) return;
+    await supabase
+      .from("assignments")
+      .delete()
+      .eq("day", dk)
+      .eq("member_id", mid)
+      .eq("job_id", jid);
+    await fetchAssignments();
   }
 
   function getMemberTimeOff(dk, mid) {
     return timeOff[dk]?.[mid] || null;
   }
-  function setMemberTimeOff(dk, mid, type) {
+  async function setMemberTimeOff(dk, mid, type) {
     if (!requireAdmin()) return;
-    setTimeOff((prev) => ({
-      ...prev,
-      [dk]: { ...(prev[dk] || {}), [mid]: type },
-    }));
-    setAssign(dk, mid, []);
+    await supabase
+      .from("time_off")
+      .upsert(
+        { day: dk, member_id: mid, type },
+        { onConflict: "day,member_id" },
+      );
+    await setAssign(dk, mid, []);
+    await fetchTimeOff();
   }
-  function clearMemberTimeOff(dk, mid) {
+  async function clearMemberTimeOff(dk, mid) {
     if (!requireAdmin()) return;
-    setTimeOff((prev) => {
-      const day = { ...(prev[dk] || {}) };
-      delete day[mid];
-      return { ...prev, [dk]: day };
-    });
+    await supabase.from("time_off").delete().eq("day", dk).eq("member_id", mid);
+    await fetchTimeOff();
   }
   function dayTimeOffCounts(dk) {
     const day = timeOff[dk] || {};
@@ -244,7 +426,11 @@ export default function App() {
     return Object.values(assignments)
       .flatMap((d) => Object.values(d))
       .flat()
-      .filter((id) => id === jid).length;
+      .filter((assignment) => assignment.jobId === jid)
+      .reduce(
+        (total, assignment) => total + Number(assignment.portion || 1),
+        0,
+      );
   }
   function mdStats(job) {
     const used = mdUsed(job.id);
@@ -263,18 +449,30 @@ export default function App() {
   }
 
   function dayUniqueJobs(dk) {
-    const ids = [...new Set(Object.values(assignments[dk] || {}).flat())];
+    const ids = [
+      ...new Set(
+        Object.values(assignments[dk] || {})
+          .flat()
+          .map((assignment) => assignment.jobId),
+      ),
+    ];
     return ids.map((id) => jobs.find((j) => j.id === id)).filter(Boolean);
   }
   function dayJobCrew(dk, jid) {
     return Object.entries(assignments[dk] || {})
-      .filter(([, jids]) => jids.includes(jid))
-      .map(([mid]) => members.find((m) => m.id === mid))
-      .filter(Boolean);
+      .map(([mid, personAssignments]) => ({
+        member: members.find((m) => m.id === mid),
+        assignment: personAssignments.find((item) => item.jobId === jid),
+      }))
+      .filter(({ assignment, member }) => assignment && member)
+      .map(({ member, assignment }) => ({
+        ...member,
+        portion: assignment.portion,
+      }));
   }
   function dayPersonCount(dk) {
     const assigned = Object.values(assignments[dk] || {}).filter(
-      (j) => j.length > 0,
+      (items) => items.length > 0,
     ).length;
     const off = Object.values(timeOff[dk] || {}).filter(Boolean).length;
     return assigned + off;
@@ -282,71 +480,186 @@ export default function App() {
   function memberWeekHours(mid) {
     return weekDays.reduce((sum, d) => {
       const dk = toKey(d);
-      return (
-        sum +
-        (getAssign(dk, mid).length > 0
-          ? members.find((m) => m.id === mid)?.hoursPerDay || 8
-          : 0)
+      const member = members.find((m) => m.id === mid);
+      const portion = getPersonAssignments(dk, mid).reduce(
+        (total, assignment) => total + Number(assignment.portion || 1),
+        0,
       );
+      return sum + portion * (member?.hoursPerDay || 8);
     }, 0);
   }
 
-  function submitAssign() {
+  async function submitAssign() {
     if (!requireAdmin()) return;
     if (!modal?.dk || !assignForm.memberId) return;
-    setAssign(modal.dk, assignForm.memberId, assignForm.jobIds);
+    const desired = assignForm.jobIds.map((jobId) => ({
+      jobId,
+      portion: assignForm.portions[jobId] || 1,
+    }));
+    if (await setAssign(modal.dk, assignForm.memberId, desired)) setModal(null);
+  }
+  async function submitCrewAssign() {
+    if (!requireAdmin() || !modal?.dk || !modal.jobId) return;
+    const dayAssignments = assignments[modal.dk] || {};
+    const selected = Object.entries(crewForm.portions).map(
+      ([memberId, portion]) => ({ memberId, portion }),
+    );
+
+    for (const { memberId, portion } of selected) {
+      if (getMemberTimeOff(modal.dk, memberId)) {
+        notify("Remove time off before assigning this person.");
+        return;
+      }
+      const otherPortion = getPersonAssignments(modal.dk, memberId)
+        .filter((assignment) => assignment.jobId !== modal.jobId)
+        .reduce(
+          (total, assignment) => total + Number(assignment.portion || 1),
+          0,
+        );
+      if (otherPortion + Number(portion) > 1) {
+        const member = members.find((item) => item.id === memberId);
+        notify(`${member?.name || "This person"} would exceed one day.`);
+        return;
+      }
+    }
+
+    const selectedIds = new Set(selected.map(({ memberId }) => memberId));
+    const removedIds = Object.entries(dayAssignments)
+      .filter(([, personAssignments]) =>
+        personAssignments.some(
+          (assignment) => assignment.jobId === modal.jobId,
+        ),
+      )
+      .map(([memberId]) => memberId)
+      .filter((memberId) => !selectedIds.has(memberId));
+
+    if (selected.length) {
+      const { error } = await supabase.from("assignments").upsert(
+        selected.map(({ memberId, portion }) => ({
+          day: modal.dk,
+          member_id: memberId,
+          job_id: modal.jobId,
+          portion,
+        })),
+        { onConflict: "day,member_id,job_id" },
+      );
+      if (error) {
+        console.error("submitCrewAssign upsert failed:", error);
+        notify("Couldn't update the job crew.");
+        return;
+      }
+    }
+    if (removedIds.length) {
+      const { error } = await supabase
+        .from("assignments")
+        .delete()
+        .eq("day", modal.dk)
+        .eq("job_id", modal.jobId)
+        .in("member_id", removedIds);
+      if (error) {
+        console.error("submitCrewAssign delete failed:", error);
+        notify("Couldn't update the job crew.");
+        return;
+      }
+    }
+    await fetchAssignments();
     setModal(null);
   }
-  function doAddJob() {
+  function openCrewAssign(dk, jobId) {
+    const job = jobs.find((item) => item.id === jobId);
+    if (!job) return;
+    const portions = {};
+    for (const member of members) {
+      const assignment = getPersonAssignments(dk, member.id).find(
+        (item) => item.jobId === jobId,
+      );
+      if (assignment) portions[member.id] = assignment.portion;
+    }
+    setCrewForm({ jobId, portions });
+    setModal({ type: "assignCrew", dk, jobId, jobName: job.name });
+  }
+  async function doAddJob() {
     if (!requireAdmin()) return;
     if (!newJob.name.trim()) return;
-    setJobs((prev) => [
-      ...prev,
-      { ...newJob, id: `j${Date.now()}`, name: newJob.name.trim() },
-    ]);
+    const { error } = await supabase.from("jobs").insert({
+      id: `j${Date.now()}`,
+      name: newJob.name.trim(),
+      category: newJob.category,
+      mann_days: newJob.mannDays,
+      notes: newJob.notes,
+    });
+    if (error) {
+      console.error("doAddJob failed:", error);
+      notify("Couldn't add job.");
+      return;
+    }
+    await fetchJobs();
     setNewJob({ name: "", category: "Metal Fab", mannDays: 10, notes: "" });
     setModal(null);
     notify("Job added.");
   }
-  function doEditJob(updated) {
+  async function doEditJob(updated) {
     if (!requireAdmin()) return;
     if (!updated.name.trim()) return;
-    setJobs((prev) =>
-      prev.map((j) =>
-        j.id === updated.id ? { ...updated, name: updated.name.trim() } : j,
-      ),
-    );
+    const { error } = await supabase
+      .from("jobs")
+      .update({
+        name: updated.name.trim(),
+        category: updated.category,
+        mann_days: updated.mannDays,
+        notes: updated.notes,
+      })
+      .eq("id", updated.id);
+    if (error) {
+      console.error("doEditJob failed:", error);
+      notify("Couldn't update job.");
+      return;
+    }
+    await fetchJobs();
     setModal(null);
     notify("Job updated.");
   }
-  function doDeleteJob(jid) {
+  async function doDeleteJob(jid) {
     if (!requireAdmin()) return;
-    setJobs((prev) => prev.filter((j) => j.id !== jid));
-    setAssignments((prev) => {
-      const next = {};
-      for (const [dk, day] of Object.entries(prev)) {
-        const nextDay = {};
-        for (const [mid, jids] of Object.entries(day)) {
-          const filtered = jids.filter((id) => id !== jid);
-          if (filtered.length > 0) nextDay[mid] = filtered;
-        }
-        if (Object.keys(nextDay).length > 0) next[dk] = nextDay;
-      }
-      return next;
-    });
+    const { error } = await supabase.from("jobs").delete().eq("id", jid);
+    if (error) {
+      console.error("doDeleteJob failed:", error);
+      notify("Couldn't delete job.");
+      return;
+    }
+    await Promise.all([fetchJobs(), fetchAssignments()]);
     notify("Job deleted.");
   }
   function updateNotes(jid, notes) {
     if (!requireAdmin()) return;
     setJobs((prev) => prev.map((j) => (j.id === jid ? { ...j, notes } : j)));
+    clearTimeout(notesTimers.current[jid]);
+    notesTimers.current[jid] = setTimeout(async () => {
+      const { error } = await supabase
+        .from("jobs")
+        .update({ notes })
+        .eq("id", jid);
+      if (error) {
+        console.error("updateNotes failed:", error);
+        notify("Couldn't save notes.");
+      }
+    }, 600);
   }
-  function doAddMember() {
+  async function doAddMember() {
     if (!requireAdmin()) return;
     if (!newMember.name.trim()) return;
-    setMembers((prev) => [
-      ...prev,
-      { ...newMember, id: `m${Date.now()}`, name: newMember.name.trim() },
-    ]);
+    const { error } = await supabase.from("members").insert({
+      id: `m${Date.now()}`,
+      name: newMember.name.trim(),
+      hours_per_day: newMember.hoursPerDay,
+      color_idx: newMember.colorIdx,
+    });
+    if (error) {
+      console.error("doAddMember failed:", error);
+      notify("Couldn't add member.");
+      return;
+    }
+    await fetchMembers();
     setNewMember({
       name: "",
       hoursPerDay: 8,
@@ -356,30 +669,36 @@ export default function App() {
     notify("Member added.");
   }
 
-  function doEditMember(updated) {
+  async function doEditMember(updated) {
     if (!requireAdmin()) return;
     if (!updated.name.trim()) return;
-    setMembers((prev) =>
-      prev.map((m) =>
-        m.id === updated.id ? { ...updated, name: updated.name.trim() } : m,
-      ),
-    );
+    const { error } = await supabase
+      .from("members")
+      .update({
+        name: updated.name.trim(),
+        hours_per_day: updated.hoursPerDay,
+        color_idx: updated.colorIdx,
+      })
+      .eq("id", updated.id);
+    if (error) {
+      console.error("doEditMember failed:", error);
+      notify("Couldn't update member.");
+      return;
+    }
+    await fetchMembers();
     setModal(null);
     notify("Member updated.");
   }
 
-  function doDeleteMember(mid) {
+  async function doDeleteMember(mid) {
     if (!requireAdmin()) return;
-    setMembers((prev) => prev.filter((m) => m.id !== mid));
-    setAssignments((prev) => {
-      const next = { ...prev };
-      Object.keys(next).forEach((wk) => {
-        Object.keys(next[wk]).forEach((jid) => {
-          next[wk][jid] = (next[wk][jid] || []).filter((id) => id !== mid);
-        });
-      });
-      return next;
-    });
+    const { error } = await supabase.from("members").delete().eq("id", mid);
+    if (error) {
+      console.error("doDeleteMember failed:", error);
+      notify("Couldn't delete member.");
+      return;
+    }
+    await Promise.all([fetchMembers(), fetchAssignments(), fetchTimeOff()]);
     setModal(null);
     notify("Member deleted.");
   }
@@ -476,6 +795,8 @@ export default function App() {
         authError={authError}
       />
     );
+
+  if (scheduleLoading) return null;
 
   return (
     <div
@@ -1226,7 +1547,10 @@ export default function App() {
                                       }}
                                     >
                                       {crew
-                                        .map((m) => m.name.split(" ")[0])
+                                        .map(
+                                          (m) =>
+                                            `${m.name.split(" ")[0]}${m.portion === 0.5 ? " ½" : ""}`,
+                                        )
                                         .join(", ")}
                                     </div>
                                   )}
@@ -1461,6 +1785,16 @@ export default function App() {
                                 setAssignForm({
                                   memberId: member.id,
                                   jobIds: [...assignedIds],
+                                  portions: Object.fromEntries(
+                                    assignedIds.map((jobId) => [
+                                      jobId,
+                                      getAssignmentPortion(
+                                        dk,
+                                        member.id,
+                                        jobId,
+                                      ),
+                                    ]),
+                                  ),
                                 });
                                 setModal({
                                   type: "assign",
@@ -1574,6 +1908,11 @@ export default function App() {
                                           }}
                                         >
                                           {job.name}
+                                          {getAssignmentPortion(
+                                            dk,
+                                            member.id,
+                                            job.id,
+                                          ) === 0.5 && " · ½"}
                                         </span>
                                       </div>
                                       {isAdmin && (
@@ -2042,7 +2381,10 @@ export default function App() {
                       </div>
                     )}
                     <div
-                      style={{ borderTop: "1px solid #F3F4F6", paddingTop: 10 }}
+                      style={{
+                        borderTop: "1px solid #F3F4F6",
+                        paddingTop: 10,
+                      }}
                     >
                       <div
                         style={{
@@ -2563,6 +2905,24 @@ export default function App() {
                         </span>
                       )}
                     </div>
+                    {isAdmin && (
+                      <button
+                        onClick={() => openCrewAssign(dayDetail, job.id)}
+                        style={{
+                          marginBottom: 8,
+                          padding: "4px 8px",
+                          border: "1px solid #D1D5DB",
+                          borderRadius: 6,
+                          background: "#fff",
+                          color: "#374151",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Assign crew
+                      </button>
+                    )}
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                       {crew.map((m) => {
                         const mc =
@@ -2583,6 +2943,7 @@ export default function App() {
                             }}
                           >
                             {m.name}
+                            {m.portion === 0.5 && " · ½ day"}
                             {isAdmin && (
                               <button
                                 onClick={() =>
@@ -2740,21 +3101,149 @@ export default function App() {
                   marginBottom: 10,
                 }}
               >
-                Assign a team member to a job
+                Assign people to a job
+              </div>
+              <div style={{ display: "flex", gap: 8, marginBottom: 10 }}>
+                <select
+                  aria-label="Job to assign crew"
+                  value={crewJobId || jobs[0]?.id || ""}
+                  onChange={(event) => setCrewJobId(event.target.value)}
+                  style={{ ...S.input, flex: 1, minWidth: 0 }}
+                >
+                  {jobs.map((job) => (
+                    <option key={job.id} value={job.id}>
+                      {job.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  disabled={!jobs.length}
+                  onClick={() =>
+                    openCrewAssign(dayDetail, crewJobId || jobs[0]?.id)
+                  }
+                  style={{ ...S.blueBtn, flexShrink: 0, padding: "8px 10px" }}
+                >
+                  Assign crew
+                </button>
               </div>
               <QuickAssign
                 members={members}
                 jobs={jobs}
-                onAssign={(mid, jid) => {
-                  const existing = getAssign(dayDetail, mid);
+                onAssign={(mid, jid, portion) => {
+                  const existing = getPersonAssignments(dayDetail, mid);
                   if (getMemberTimeOff(dayDetail, mid))
                     clearMemberTimeOff(dayDetail, mid);
-                  if (!existing.includes(jid))
-                    setAssign(dayDetail, mid, [...existing, jid]);
+                  const next = existing.some((item) => item.jobId === jid)
+                    ? existing.map((item) =>
+                        item.jobId === jid ? { ...item, portion } : item,
+                      )
+                    : [...existing, { jobId: jid, portion }];
+                  setAssign(dayDetail, mid, next);
                 }}
               />
             </div>
           )}
+        </ModalWrap>
+      )}
+
+      {modal?.type === "assignCrew" && isAdmin && (
+        <ModalWrap onClose={() => setModal(null)}>
+          <div style={{ fontWeight: 800, fontSize: 17, marginBottom: 4 }}>
+            Assign crew
+          </div>
+          <div style={{ fontSize: 12, color: "#9CA3AF", marginBottom: 12 }}>
+            {modal.jobName} · {modal.dk}
+          </div>
+          <div
+            style={{
+              maxHeight: 360,
+              overflowY: "auto",
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+              marginBottom: 14,
+            }}
+          >
+            {members.map((member) => {
+              const selected = Object.hasOwn(crewForm.portions, member.id);
+              const portion = crewForm.portions[member.id] || 1;
+              const timeOffType = getMemberTimeOff(modal.dk, member.id);
+              const color =
+                MEMBER_COLORS[member.colorIdx % MEMBER_COLORS.length];
+              return (
+                <div
+                  key={member.id}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "8px 10px",
+                    borderRadius: 8,
+                    border: `1px solid ${selected ? color.bg : "#E5E7EB"}`,
+                    background: selected ? color.light : "#fff",
+                    opacity: timeOffType ? 0.55 : 1,
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    disabled={!!timeOffType}
+                    onChange={(event) =>
+                      setCrewForm((form) => {
+                        const portions = { ...form.portions };
+                        if (event.target.checked) portions[member.id] = 1;
+                        else delete portions[member.id];
+                        return { ...form, portions };
+                      })
+                    }
+                  />
+                  <span style={{ flex: 1, fontSize: 12, fontWeight: 600 }}>
+                    {member.name}
+                    {timeOffType ? ` · ${timeOffType}` : ""}
+                  </span>
+                  {selected && (
+                    <div style={{ display: "flex", gap: 4 }}>
+                      {[1, 0.5].map((value) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() =>
+                            setCrewForm((form) => ({
+                              ...form,
+                              portions: {
+                                ...form.portions,
+                                [member.id]: value,
+                              },
+                            }))
+                          }
+                          style={{
+                            padding: "4px 7px",
+                            border: `1px solid ${portion === value ? color.bg : "#D1D5DB"}`,
+                            borderRadius: 5,
+                            background: portion === value ? color.bg : "#fff",
+                            color: portion === value ? "#fff" : "#374151",
+                            fontSize: 10,
+                            fontWeight: 700,
+                            cursor: "pointer",
+                          }}
+                        >
+                          {value === 1 ? "Full" : "Half"}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => setModal(null)} style={S.cancelBtn}>
+              Cancel
+            </button>
+            <button onClick={submitCrewAssign} style={S.blueBtn}>
+              Save crew
+            </button>
+          </div>
         </ModalWrap>
       )}
 
@@ -2864,6 +3353,13 @@ export default function App() {
                         jobIds: f.jobIds.includes(job.id)
                           ? f.jobIds.filter((id) => id !== job.id)
                           : [...f.jobIds, job.id],
+                        portions: f.jobIds.includes(job.id)
+                          ? Object.fromEntries(
+                              Object.entries(f.portions).filter(
+                                ([id]) => id !== job.id,
+                              ),
+                            )
+                          : { ...f.portions, [job.id]: 1 },
                       }))
                     }
                     style={{ width: 15, height: 15, accentColor: c.dot }}
@@ -2893,6 +3389,32 @@ export default function App() {
                         : `· ${job.mannDays - st.used} left`}
                     </div>
                   </div>
+                  {checked && (
+                    <select
+                      aria-label={`${job.name} assignment length`}
+                      value={assignForm.portions[job.id] || 1}
+                      onClick={(event) => event.stopPropagation()}
+                      onChange={(event) =>
+                        setAssignForm((form) => ({
+                          ...form,
+                          portions: {
+                            ...form.portions,
+                            [job.id]: Number(event.target.value),
+                          },
+                        }))
+                      }
+                      style={{
+                        border: "1px solid #D1D5DB",
+                        borderRadius: 5,
+                        background: "#fff",
+                        padding: "4px 5px",
+                        fontSize: 11,
+                      }}
+                    >
+                      <option value={1}>Full</option>
+                      <option value={0.5}>Half</option>
+                    </select>
+                  )}
                   {st.isOver && (
                     <span
                       style={{
